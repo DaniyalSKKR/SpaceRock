@@ -1,0 +1,26 @@
+/* Styles */
+
+#map-placeholder,
+#threejs-placeholder {
+    background: linear-gradient(180deg, #0b1220, #102033);
+    min-height: 360px;
+    border-radius: .5rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.control-label {
+    font-weight: 600;
+}
+
+.muted-small {
+    font-size: .85rem;
+    color: #6c757d;
+}
+
+.results-card {
+    min-height: 120px;
+}

@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Impactor-2025 Simulator | Spacerock{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-0">Meteor Madness — Interactive Simulation</h1>
+            <p class="muted-small mb-0">Explore impact scenarios, visualize trajectories, and test mitigation
+                strategies.</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal"
+                data-bs-target="#aboutModal">About</button>
+            <button class="btn btn-primary" id="simulateBtn">Run Simulation</button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Left column: controls -->
+        <div class="col-lg-4 order-lg-1">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Inputs</h5>
+
+                    <!-- Asteroid basic -->
+                    <div class="mb-3">
+                        <label class="control-label" for="asteroidName">Asteroid name</label>
+                        <input id="asteroidName" class="form-control" type="text" value="Impactor-2025"
+                            aria-label="Asteroid name">
+                        <div class="muted-small">Name used for scenario saves and sharing.</div>
+                    </div>
+
+                    <div class="row gx-2">
+                        <div class="col-6 mb-3">
+                            <label class="control-label" for="diameter">Diameter (m)</label>
+                            <input id="diameter" class="form-control" type="number" min="0.1" step="0.1" value="50"
+                                aria-label="Asteroid diameter in meters">
+                            <div class="muted-small">Enter object diameter in meters.</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="control-label" for="density">Density (kg/m³)</label>
+                            <input id="density" class="form-control" type="number" min="500" step="10" value="3000"
+                                aria-label="Asteroid density">
+                            <div class="muted-small">Typical rock ~2500-3500 kg/m³.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="control-label" for="velocity">Velocity (km/s)</label>
+                        <input id="velocity" class="form-control" type="number" min="1" step="0.1" value="20"
+                            aria-label="Asteroid velocity in kilometers per second">
+                        <div class="muted-small">Relative impact speed at encounter (km/s).</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="control-label" for="impactAngle">Impact angle (°)</label>
+                        <input id="impactAngle" class="form-control" type="number" min="0" max="90" step="1" value="45"
+                            aria-label="Impact angle in degrees">
+                        <div class="muted-small">Angle from horizontal; 90° = vertical.</div>
+                    </div>
+
+                    <!-- Mitigation -->
+                    <div class="mb-3">
+                        <label class="control-label" for="mitigation">Mitigation</label>
+                        <select id="mitigation" class="form-select" aria-label="Mitigation strategy">
+                            <option value="none" selected>None</option>
+                            <option value="kinetic">Kinetic impactor (delta-v)</option>
+                            <option value="gravity">Gravity tractor (approx delta-v)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="deltaVRow" style="display:none;">
+                        <label class="control-label" for="deltaV">Delta-v (m/s)</label>
+                        <input id="deltaV" class="form-control" type="number" step="0.01" value="0.5"
+                            aria-label="Delta v in meters per second">
+                        <div class="muted-small">Approx extra velocity applied by mitigation before impact.</div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Scenario controls -->
+                    <div class="d-grid gap-2">
+                        <button id="simulateBtn2" class="btn btn-primary">Simulate Scenario</button>
+                        <button id="resetBtn" class="btn btn-outline-secondary">Reset Inputs</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Explanations / Quick tips -->
+            <div class="card mt-3 shadow-sm">
+                <div class="card-body">
+                    <h6>Quick tips</h6>
+                    <ul class="ps-3">
+                        <li>Use <strong>Delta-v</strong> to simulate deflection opportunities.</li>
+                        <li>Click the <em>3D</em> or <em>Map</em> placeholders to load richer visualizations (replace
+                            placeholders with Three.js / Leaflet).</li>
+                        <li>Data integration: call NASA NEO API for orbital elements and USGS for topography in your
+                            backend view.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle column: visualizations -->
+        <div class="col-lg-5 order-lg-2">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Trajectory / 3D View</h5>
+                    <!-- Replace with Three.js canvas; keep placeholder for now -->
+                    <div id="threejs-placeholder" role="img" tabindex="0"
+                        aria-label="3D trajectory visualization placeholder">
+                        <div>
+                            <div class="h5">3D visualization placeholder</div>
+                            <div class="muted-small">Replace with Three.js scene showing orbit, Earth, and impact path.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Impact Map</h5>
+                    <!-- Replace with an interactive map (Leaflet / Mapbox) -->
+                    <div id="map-placeholder" role="img" tabindex="0" aria-label="Impact map placeholder">
+                        <div>
+                            <div class="h5">Map placeholder</div>
+                            <div class="muted-small">Replace with Leaflet + USGS elevation / tsunami layers.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: results and controls -->
+        <div class="col-lg-3 order-lg-3">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Results</h5>
+
+                    <div class="mb-3 results-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="text-muted small">Kinetic Energy</div>
+                                <div id="energyText" class="fs-5 fw-600">—</div>
+                            </div>
+                            <div>
+                                <i class="bi bi-lightning-charge fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 results-card">
+                        <div class="text-muted small">Estimated Crater</div>
+                        <div id="craterText" class="fs-5 fw-600">—</div>
+                        <div class="muted-small">Rough estimate — refine with published scaling laws.</div>
+                    </div>
+
+                    <div class="mb-3 results-card">
+                        <div class="text-muted small">Blast / Affected Radius</div>
+                        <div id="radiusText" class="fs-5 fw-600">—</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-muted small">Tsunami Risk</div>
+                        <div id="tsunamiText" class="fs-6">—</div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-grid">
+                        <button id="shareBtn" class="btn btn-outline-primary">Save / Share Scenario</button>
+                        <a href="#" id="fetchDataLink" class="btn btn-link small mt-2">Fetch NASA / USGS data</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline / mitigation slider -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Timeline & Mitigation</h6>
+                    <label class="form-label">Time to impact (days)</label>
+                    <input id="timeToImpact" type="range" class="form-range" min="1" max="365" value="90"
+                        aria-label="Time to impact in days">
+                    <div class="d-flex justify-content-between">
+                        <small id="timeVal">90 days</small>
+                        <small class="muted-small">Shorter time = less deflection margin</small>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- About modal -->
+<div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aboutModalLabel">Impactor-2025 Simulator — Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>This prototype demonstrates an integrated UI for exploring asteroid impact scenarios using NASA and
+                    USGS data. It focuses on clarity and accessibility while allowing room for more rigorous physics
+                    backends and richer visualizations (Three.js, Leaflet, D3).</p>
+                <h6>Where to plug real data</h6>
+                <ul>
+                    <li><strong>NASA NEO API:</strong> Pull orbital elements and physical parameters in your Django
+                        view/backend, then send them to the template via context or an API endpoint.</li>
+                    <li><strong>USGS:</strong> Use elevation (DEM), tsunami zones, and seismic layers for map overlays
+                        (serve tiles or vector tiles to the front end).</li>
+                    <li><strong>Back-end simulation:</strong> Implement orbital propagation and impact physics
+                        server-side (Python), return results to client for visualization & sharing.</li>
+                </ul>
+                <h6>Accessibility & UX</h6>
+                <p>All controls include labels, keyboard focus, and descriptive text. For production, add ARIA live
+                    regions for simulation updates, colorblind palettes, and keyboard-only paths.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    /*
+      Basic front-end simulation logic (approximate):
+      - Calculates mass from diameter and density (sphere)
+      - KE = 0.5 * m * v^2
+      - TNT equiv (megatons) = KE / 4.184e15
+      - Crater & radius: simple scaling approximations for demo only
+      Replace these with rigorous physics on the backend for production.
+    */
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const diameterEl = document.getElementById('diameter');
+        const densityEl = document.getElementById('density');
+        const velocityEl = document.getElementById('velocity');
+        const impactAngleEl = document.getElementById('impactAngle');
+        const mitigationEl = document.getElementById('mitigation');
+        const deltaVRow = document.getElementById('deltaVRow');
+        const deltaVEl = document.getElementById('deltaV');
+        const timeToImpact = document.getElementById('timeToImpact');
+        const timeVal = document.getElementById('timeVal');
+
+        const energyText = document.getElementById('energyText');
+        const craterText = document.getElementById('craterText');
+        const radiusText = document.getElementById('radiusText');
+        const tsunamiText = document.getElementById('tsunamiText');
+
+        const simulateButtons = [document.getElementById('simulateBtn'), document.getElementById('simulateBtn2')];
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Toggle delta-v control visibility
+        mitigationEl.addEventListener('change', (e) => {
+            deltaVRow.style.display = (e.target.value === 'none') ? 'none' : 'block';
+        });
+
+        timeToImpact.addEventListener('input', () => {
+            timeVal.textContent = timeToImpact.value + ' days';
+        });
+
+        function computeAndShow() {
+            // read inputs
+            const d_m = parseFloat(diameterEl.value) || 0;           // m
+            const radius_m = d_m / 2.0;
+            const density = parseFloat(densityEl.value) || 3000;    // kg/m^3
+            const v_kms = parseFloat(velocityEl.value) || 0;        // km/s
+            const v_ms = v_kms * 1000.0;                            // m/s
+            const angle_deg = parseFloat(impactAngleEl.value) || 45;
+            const mitigation = mitigationEl.value;
+            let delta_v = 0;
+            if (mitigation !== 'none') {
+                delta_v = parseFloat(deltaVEl.value) || 0;
+            }
+
+            // volume (sphere)
+            const volume_m3 = (4.0 / 3.0) * Math.PI * Math.pow(radius_m, 3);
+            const mass_kg = density * volume_m3;
+
+            // apply mitigation as small delta-v change (simple linear adjust of speed)
+            // note: real deflection changes orbital phase and hit probability, this is just a demo
+            const effective_v_ms = Math.max(0, v_ms - delta_v);
+
+            // kinetic energy (J)
+            const ke_j = 0.5 * mass_kg * Math.pow(effective_v_ms, 2);
+
+            // TNT equivalent: 1 megaton TNT ≈ 4.184e15 J
+            const ke_megatons = ke_j / 4.184e15;
+
+            // simple crater diameter scaling (very approximate, demo only)
+            // crater_d_km roughly proportional to (ke_megatons)^(1/3)
+            const crater_km = ke_megatons > 0 ? 0.5 * Math.pow(ke_megatons, 1 / 3) : 0;
+            const crater_m = crater_km * 1000;
+
+            // blast / affected radius (very rough): scale with (energy)^(1/3)
+            const affected_km = ke_megatons > 0 ? 5 * Math.pow(ke_megatons, 1 / 3) : 0;
+
+            // tsunami risk heuristic: if impact is within coastal band (placeholder), or if crater_km > threshold
+            // Here we just estimate a "risk level" for demo:
+            let tsunamiRisk = 'Low';
+            if (crater_km > 1.5) tsunamiRisk = 'Medium';
+            if (crater_km > 5) tsunamiRisk = 'High';
+
+            // update UI with formatted numbers
+            energyText.textContent = `${ke_megatons.toFixed(3)} Mt TNT equiv`;
+            craterText.textContent = `${crater_km.toFixed(2)} km ≈ ${Math.round(crater_m)} m`;
+            radiusText.textContent = `${affected_km.toFixed(2)} km (approx)`;
+            tsunamiText.textContent = tsunamiRisk;
+
+            // Optionally: fire a custom event providing the raw numbers to 3D/map components
+            const detail = {
+                mass_kg, ke_j, ke_megatons, crater_km, affected_km, inputs: {
+                    d_m, density, v_kms, angle_deg, mitigation, delta_v, timeToImpact: timeToImpact.value
+                }
+            };
+            document.dispatchEvent(new CustomEvent('sim:results', { detail }));
+
+            // Small visual cue
+            document.querySelectorAll('.results-card').forEach(c => c.classList.add('border', 'border-2', 'border-primary'));
+            setTimeout(() => {
+                document.querySelectorAll('.results-card').forEach(c => c.classList.remove('border', 'border-2', 'border-primary'));
+            }, 700);
+        }
+
+        simulateButtons.forEach(btn => btn.addEventListener('click', computeAndShow));
+        resetBtn.addEventListener('click', () => {
+            diameterEl.value = 50;
+            densityEl.value = 3000;
+            velocityEl.value = 20;
+            impactAngleEl.value = 45;
+            mitigationEl.value = 'none';
+            deltaVRow.style.display = 'none';
+            deltaVEl.value = 0.5;
+            timeToImpact.value = 90;
+            timeVal.textContent = '90 days';
+            energyText.textContent = '—';
+            craterText.textContent = '—';
+            radiusText.textContent = '—';
+            tsunamiText.textContent = '—';
+        });
+
+        // Example: how an embedded 3D/Map component might listen for sim results:
+        document.addEventListener('sim:results', (e) => {
+            // e.detail contains numbers you can animate in Three.js or draw on Leaflet
+            // Example placeholder: console.log('Sim results for 3D/map:', e.detail);
+            // Replace with actual rendering calls.
+            console.log('Sim results for 3D/map:', e.detail);
+        });
+
+        // keyboard accessibility: Enter to simulate when focused on controls
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('keydown', (evt) => {
+                if (evt.key === 'Enter') computeAndShow();
+            });
+        });
+    });
+</script>
+{% endblock %}
