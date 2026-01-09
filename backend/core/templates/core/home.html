@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Earth Scene{% endblock %}
+
+{% block content %}
+<div id="three-container" style="width:100vw; height:100vh;"></div>
+{% endblock %}
+
+{% block extra_head %}
+<script type="module" src="{% static 'build/main.js' %}"></script>
+{% endblock %}
