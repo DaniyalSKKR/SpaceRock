@@ -32,9 +32,8 @@ scene.add(light);
 
 // Globe
 const textureLoader = new THREE.TextureLoader();
-const earthTexture = textureLoader.load(
-	"/static/textures/planets/earth_day_4096.jpg"
-);
+// const earthTexture = textureLoader.load("/public/earth_texture.jpg");
+const earthTexture = textureLoader.load("/static/textures/earth_texture.jpg");
 
 const geometry = new THREE.SphereGeometry(1, 64, 64);
 const material = new THREE.MeshStandardMaterial({ map: earthTexture });
