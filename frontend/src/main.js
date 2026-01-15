@@ -1,13 +1,15 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-// Get container from Django template
+// ---------------------
+// Container & Scene
+// ---------------------
 const container = document.getElementById("three-container");
-
-// Scene
 const scene = new THREE.Scene();
 
+// ---------------------
 // Camera
+// ---------------------
 const camera = new THREE.PerspectiveCamera(
 	75,
 	window.innerWidth / window.innerHeight,
@@ -16,38 +18,109 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 3;
 
+// ---------------------
 // Renderer
+// ---------------------
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 container.appendChild(renderer.domElement);
 
-// Controls
+// ---------------------
+// Orbit Controls
+// ---------------------
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
+// ---------------------
 // Lighting
+// ---------------------
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 5, 5);
 scene.add(light);
 
-// Globe
-const textureLoader = new THREE.TextureLoader();
-// const earthTexture = textureLoader.load("/public/earth_texture.jpg");
-const earthTexture = textureLoader.load("/static/textures/earth_texture.jpg");
+// ---------------------
+// Canvas texture for globe
+// ---------------------
+const canvas = document.createElement("canvas");
+canvas.width = 2048;
+canvas.height = 1024;
+const ctx = canvas.getContext("2d");
 
-const geometry = new THREE.SphereGeometry(1, 64, 64);
-const material = new THREE.MeshStandardMaterial({ map: earthTexture });
-const globe = new THREE.Mesh(geometry, material);
+// Create Three.js texture immediately
+const dynamicTexture = new THREE.CanvasTexture(canvas);
+
+// Load Earth image
+const earthImg = new Image();
+earthImg.src = "/static/textures/earth_texture.jpg";
+earthImg.onload = () => {
+	// Draw Earth immediately
+	ctx.drawImage(earthImg, 0, 0, canvas.width, canvas.height);
+	dynamicTexture.needsUpdate = true; // show the texture in Three.js
+};
+
+// ---------------------
+// Globe
+// ---------------------
+const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
+const globeMaterial = new THREE.MeshStandardMaterial({ map: dynamicTexture });
+const globe = new THREE.Mesh(globeGeometry, globeMaterial);
 scene.add(globe);
 
-// Handle resize
+// ---------------------
+// Raycaster + Mouse
+// ---------------------
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// ---------------------
+// Marker Image
+// ---------------------
+const markerImg = new Image();
+markerImg.src = "/static/textures/red_circle.png";
+
+// ---------------------
+// Click handler → draw marker
+// ---------------------
+window.addEventListener("click", (event) => {
+	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+	raycaster.setFromCamera(mouse, camera);
+	const intersects = raycaster.intersectObject(globe);
+
+	if (!intersects.length) return;
+
+	// Get UV coordinates
+	const uv = intersects[0].uv;
+	const x = uv.x * canvas.width;
+	const y = (1 - uv.y) * canvas.height; // flip Y for canvas
+
+	// Draw marker image centered at clicked position
+	const markerSize = 32; // adjust size
+	ctx.drawImage(
+		markerImg,
+		x - markerSize / 2,
+		y - markerSize / 2,
+		markerSize,
+		markerSize
+	);
+
+	// Update Three.js texture
+	dynamicTexture.needsUpdate = true;
+});
+
+// ---------------------
+// Handle window resize
+// ---------------------
 window.addEventListener("resize", () => {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// ---------------------
 // Animate
+// ---------------------
 function animate() {
 	requestAnimationFrame(animate);
 	globe.rotation.y += 0.001;

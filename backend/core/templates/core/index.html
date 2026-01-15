@@ -286,9 +286,18 @@
                 delta_v = parseFloat(deltaVEl.value) || 0;
             }
 
+            // Fill in missing values
+            densityEl.value = density;
+            diameterEl.value = d_m;
+            impactAngleEl.value = angle_deg;
+            velocityEl.value = v_kms;
+
             // volume (sphere)
             const volume_m3 = (4.0 / 3.0) * Math.PI * Math.pow(radius_m, 3);
             const mass_kg = density * volume_m3;
+
+            // density
+            // mass / volume = density
 
             // apply mitigation as small delta-v change (simple linear adjust of speed)
             // note: real deflection changes orbital phase and hit probability, this is just a demo
@@ -310,7 +319,8 @@
 
             // tsunami risk heuristic: if impact is within coastal band (placeholder), or if crater_km > threshold
             // Here we just estimate a "risk level" for demo:
-            let tsunamiRisk = 'Low';
+            let tsunamiRisk = 'None';
+            if (crater_km > 1) tsunamiRisk = 'Low';
             if (crater_km > 1.5) tsunamiRisk = 'Medium';
             if (crater_km > 5) tsunamiRisk = 'High';
 
