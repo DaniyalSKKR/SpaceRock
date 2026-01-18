@@ -22,8 +22,16 @@ camera.position.z = 3;
 // Renderer
 // ---------------------
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+// renderer.setSize(container.clientWidth, container.clientHeight);
 container.appendChild(renderer.domElement);
+
+window.addEventListener("load", () => {
+	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+	renderer.setSize(container.clientWidth, container.clientHeight);
+
+	camera.aspect = container.clientWidth / container.clientHeight;
+	camera.updateProjectionMatrix();
+});
 
 // ---------------------
 // Orbit Controls
@@ -113,9 +121,12 @@ window.addEventListener("click", (event) => {
 // Handle window resize
 // ---------------------
 window.addEventListener("resize", () => {
-	camera.aspect = window.innerWidth / window.innerHeight;
+	const width = container.clientWidth;
+	const height = container.clientHeight;
+
+	renderer.setSize(width, height);
+	camera.aspect = width / height;
 	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // ---------------------

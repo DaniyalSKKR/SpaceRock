@@ -106,19 +106,14 @@
             </div>
         </div>
 
-        <!-- Middle column: visualizations -->
+        <!-- Middle column: visualizations - Trajectory / 3D View -->
         <div class="col-lg-5 order-lg-2">
             <div class="card shadow-sm mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Trajectory / 3D View</h5>
                     <!-- Replace with Three.js canvas; keep placeholder for now -->
-                    <div id="threejs-placeholder" role="img" tabindex="0"
+                    <div id="three-container" class="three-small-window" role="img" tabindex="0"
                         aria-label="3D trajectory visualization placeholder">
-                        <div>
-                            <div class="h5">3D visualization placeholder</div>
-                            <div class="muted-small">Replace with Three.js scene showing orbit, Earth, and impact path.
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -378,4 +373,5 @@
         });
     });
 </script>
+<script type="module" src="{% static 'build/main.js' %}"></script>
 {% endblock %}

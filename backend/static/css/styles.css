@@ -1,26 +1,39 @@
 /* Styles */
 
-#map-placeholder,
-#threejs-placeholder {
-    background: linear-gradient(180deg, #0b1220, #102033);
-    min-height: 360px;
-    border-radius: .5rem;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+#map-placeholder {
+	background: linear-gradient(180deg, #0b1220, #102033);
+	min-height: 360px;
+	border-radius: 0.5rem;
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+/* Optional small window variant */
+.three-small-window {
+	/* width: 100% !important; */
+	height: 350px;
+	border: 1px solid #ccc;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+/* Use later */
+.three-large-window {
+	height: 400px;
 }
 
 .control-label {
-    font-weight: 600;
+	font-weight: 600;
 }
 
 .muted-small {
-    font-size: .85rem;
-    color: #6c757d;
+	font-size: 0.85rem;
+	color: #6c757d;
 }
 
 .results-card {
-    min-height: 120px;
+	min-height: 120px;
 }
