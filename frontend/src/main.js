@@ -14,7 +14,7 @@ const camera = new THREE.PerspectiveCamera(
 	75,
 	window.innerWidth / window.innerHeight,
 	0.1,
-	1000
+	1000,
 );
 camera.position.z = 3;
 
@@ -23,6 +23,8 @@ camera.position.z = 3;
 // ---------------------
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 // renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.domElement.style.position = "absolute";
+renderer.domElement.style.zIndex = "1";
 container.appendChild(renderer.domElement);
 
 window.addEventListener("load", () => {
@@ -110,7 +112,7 @@ window.addEventListener("click", (event) => {
 		x - markerSize / 2,
 		y - markerSize / 2,
 		markerSize,
-		markerSize
+		markerSize,
 	);
 
 	// Update Three.js texture

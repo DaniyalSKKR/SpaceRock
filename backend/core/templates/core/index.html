@@ -114,6 +114,11 @@
                     <!-- Replace with Three.js canvas; keep placeholder for now -->
                     <div id="three-container" class="three-small-window" role="img" tabindex="0"
                         aria-label="3D trajectory visualization placeholder">
+                        <a href="{% url 'home' %}">
+                            <button class="three-small-expand-btn">
+                                <img class="expand-btn" src="{% static 'images/expand-arrows.png' %}">
+                            </button>
+                        </a>
                     </div>
                 </div>
             </div>
