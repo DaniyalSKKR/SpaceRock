@@ -49,7 +49,6 @@
 
 .three-small-expand-btn img {
 	height: 100%; /* Image takes full height of the 20px button */
-	display: block;
 }
 
 /* Use later */
@@ -70,6 +69,21 @@
 	min-height: 80px;
 }
 
+.expand-density {
+	height: 35px;
+}
+
+.expand-density img {
+	height: 100%;
+}
+
+.minimize-row {
+	height: 35px;
+}
+
+.minimize-row img {
+	height: 100%;
+}
 /* Radar start */
 
 .radar {

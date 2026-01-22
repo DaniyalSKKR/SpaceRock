@@ -30,15 +30,15 @@
                 <div class="card-body">
                     <h5 class="card-title">Inputs</h5>
 
-                    <!-- Asteroid basic -->
+                    <!-- Inputs -->
                     <div class="mb-3">
-                        <label class="control-label" for="asteroidName">Asteroid name</label>
-                        <input id="asteroidName" class="form-control" type="text" value="Impactor-2025"
+                        <label class="control-label" for="asteroid-name">Asteroid name</label>
+                        <input id="asteroid-name" class="form-control" type="text" value="Impactor-2025"
                             aria-label="Asteroid name">
                         <div class="muted-small">Name used for scenario saves and sharing.</div>
                     </div>
 
-                    <div class="row gx-2">
+                    <div class="d-flex row gx-2">
                         <div class="col-6 mb-3">
                             <label class="control-label" for="diameter">Diameter (m)</label>
                             <input id="diameter" class="form-control" type="number" min="0.1" step="0.1" value="50"
@@ -47,9 +47,32 @@
                         </div>
                         <div class="col-6 mb-3">
                             <label class="control-label" for="density">Density (kg/m³)</label>
-                            <input id="density" class="form-control" type="number" min="500" step="10" value="3000"
-                                aria-label="Asteroid density">
+                            <div class="d-flex align-items-center gap-2">
+                                <input id="density" class="form-control" type="number" min="500" step="10" value="3000"
+                                    aria-label="Asteroid density">
+                                <button class="expand-density border-0 rounded-2"><img class="p-2"
+                                        src="{% static 'images/plus.png' %}"></button>
+                            </div>
                             <div class="muted-small">Typical rock ~2500-3500 kg/m³.</div>
+                        </div>
+                    </div>
+
+                    <div class="row gx-2 d-none" id="volume-mass-row">
+                        <div class="col-6 mb-3">
+                            <label class="control-label" for="volume">Volume (m³)</label>
+                            <input id="volume" class="form-control" type="number" step="1" value="1000"
+                                aria-label="Volume measured in cubic meters">
+                            <div class="muted-small">Approx volume of asteroid.</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="control-label" for="mass">Mass (kg)</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input id="mass" class="form-control" type="number" step="10" value="30000000"
+                                    aria-label="Mass in kilograms">
+                                <button id='minimize-vol-mass' class="minimize-row border-0 rounded-2"><img class="p-2"
+                                        src="{% static 'images/minus.png' %}"></button>
+                            </div>
+                            <div class="muted-small">Approx mass of asteroid.</div>
                         </div>
                     </div>
 
@@ -356,6 +379,7 @@
             radiusText.textContent = `${affected_km.toFixed(2)} km (approx)`;
             tsunamiText.textContent = tsunamiRisk;
 
+
             // Optionally: fire a custom event providing the raw numbers to 3D/map components
             const detail = {
                 mass_kg, ke_j, ke_megatons, crater_km, affected_km, inputs: {
@@ -391,7 +415,6 @@
         // Example: how an embedded 3D/Map component might listen for sim results:
         document.addEventListener('sim:results', (e) => {
             // e.detail contains numbers you can animate in Three.js or draw on Leaflet
-            // Example placeholder: console.log('Sim results for 3D/map:', e.detail);
             // Replace with actual rendering calls.
             console.log('Sim results for 3D/map:', e.detail);
         });
@@ -403,6 +426,49 @@
             });
         });
     });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const density = document.getElementById('density');
+        const volume = document.getElementById('volume');
+        const mass = document.getElementById('mass');
+        const volumeMassRow = document.getElementById('volume-mass-row');
+        const expandBtn = document.querySelector('.expand-density');
+        const minimizeBtn = document.getElementById('minimize-vol-mass');
+
+        // Expand / minimize
+        expandBtn.addEventListener("click", () => {
+            volumeMassRow.classList.remove('d-none');
+            expandBtn.classList.add('d-none');
+            density.disabled = true; // use readonly instead of disabled
+        });
+
+        minimizeBtn.addEventListener("click", () => {
+            volumeMassRow.classList.add('d-none');
+            expandBtn.classList.remove('d-none');
+            density.disabled = false;
+        });
+
+        // Update density when mass or volume changes
+        function updateDensity() {
+            if (Number(mass.value) === 0) {
+                mass.value = 1;
+            }
+            if (Number(volume.value) === 0) {
+                volume.value = 1;
+            }
+
+            density.value = (Number(mass.value) / Number(volume.value)).toPrecision(8);
+        }
+
+        // Attach listeners regardless of visibility
+        mass.addEventListener('input', updateDensity);
+        mass.addEventListener('change', updateDensity);
+        volume.addEventListener('input', updateDensity);
+        volume.addEventListener('change', updateDensity);
+
+    });
+
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
