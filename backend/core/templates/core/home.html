@@ -4,9 +4,15 @@
 {% block title %}Earth Scene{% endblock %}
 
 {% block content %}
-<div id="three-container" style="width:100vw; height:100vh;"></div>
+<div id="three-container" class="three-large-window"></div>
 {% endblock %}
 
-{% block extra_head %}
+{% block extra_scripts %}
+<script>
+    window.APP_CONFIG = {
+        EARTH_TEXTURE: "{% static 'textures/earth_texture.jpg' %}",
+        MARKER_IMAGE: "{% static 'textures/red_circle.png' %}"
+    };
+</script>
 <script type="module" src="{% static 'build/main.js' %}"></script>
 {% endblock %}

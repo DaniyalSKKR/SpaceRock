@@ -59,14 +59,28 @@ const ctx = canvas.getContext("2d");
 // Create Three.js texture immediately
 const dynamicTexture = new THREE.CanvasTexture(canvas);
 
-// Load Earth image
-const earthImg = new Image();
-earthImg.src = "/static/textures/earth_texture.jpg";
-earthImg.onload = () => {
-	// Draw Earth immediately
-	ctx.drawImage(earthImg, 0, 0, canvas.width, canvas.height);
-	dynamicTexture.needsUpdate = true; // show the texture in Three.js
+// ---------------------
+// Path config (Django or fallback for frontend)
+// ---------------------
+const DEV_PATHS = {
+	EARTH_TEXTURE: "/src/assets/earth_texture.jpg",
+	MARKER_IMAGE: "/src/assets/red_circle.png",
 };
+
+const PATHS = window.APP_CONFIG || DEV_PATHS;
+
+// ---------------------
+// Load textures
+// ---------------------
+const earthImg = new Image();
+earthImg.src = PATHS.EARTH_TEXTURE;
+earthImg.onload = () => {
+	ctx.drawImage(earthImg, 0, 0, canvas.width, canvas.height);
+	dynamicTexture.needsUpdate = true;
+};
+
+const markerImg = new Image();
+markerImg.src = PATHS.MARKER_IMAGE;
 
 // ---------------------
 // Globe
@@ -81,12 +95,6 @@ scene.add(globe);
 // ---------------------
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-
-// ---------------------
-// Marker Image
-// ---------------------
-const markerImg = new Image();
-markerImg.src = "/static/textures/red_circle.png";
 
 // ---------------------
 // Click handler → draw marker
