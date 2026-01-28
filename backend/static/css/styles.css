@@ -85,6 +85,13 @@
 .minimize-row img {
 	height: 100%;
 }
+
+.readonly-grey {
+	background-color: #e9ecef;
+	color: #495057;
+	pointer-events: none;
+}
+
 /* Radar start */
 
 .radar {
