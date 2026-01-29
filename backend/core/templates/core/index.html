@@ -275,7 +275,7 @@
                     </div>
 
                     <div class="results-card">
-                        <div class="text-muted small">Estimated Crater</div>
+                        <div class="text-muted small">Transient Crater Diameter</div>
                         <div id="craterText" class="fs-5 fw-600">—</div>
 
                     </div>
@@ -390,6 +390,7 @@
     */
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Meteor Metrics
         const diameterEl = document.getElementById('met-diameter');
         const densityEl = document.getElementById('met-density');
         const velocityEl = document.getElementById('velocity');
@@ -400,6 +401,16 @@
         const timeToImpact = document.getElementById('timeToImpact');
         const timeVal = document.getElementById('timeVal');
 
+        // Target Metrics
+        const gravityEl = document.getElementById('gravity');
+        const targetMaterialEl = document.getElementById('target-material');
+        const targetDensityEl = document.getElementById('target-density');
+        const targetMatStrEl = document.getElementById('material-str');
+        const muEl = document.getElementById('mu');
+        const nuEl = document.getElementById('nu');
+        const k1El = document.getElementById('k1');
+
+        // Scenario Metrics (Results)
         const energyText = document.getElementById('energyText');
         const craterText = document.getElementById('craterText');
         const radiusText = document.getElementById('radiusText');
@@ -423,9 +434,21 @@
             const radius_m = d_m / 2.0;
             const density = parseFloat(densityEl.value) || 3000;    // kg/m^3
             const v_kms = parseFloat(velocityEl.value) || 0;        // km/s
-            const v_ms = v_kms * 1000.0;                            // m/s
-            const angle_deg = parseFloat(impactAngleEl.value) || 45;
+            const v_ms = v_kms * 1000.0;                            // m/s (vi)
+            const angle_deg = parseFloat(impactAngleEl.value) || 90;
             const mitigation = mitigationEl.value;
+
+            // Used for calculating transient crater diameter
+            const g = parseFloat(gravityEl.value);
+            const y_str = parseFloat(targetMatStrEl.value);
+            const p_t = parseFloat(targetDensityEl.value);
+            const p_i = density;
+            const k1 = parseFloat(k1El.value);
+            const mu = parseFloat(muEl.value);
+            const nu = parseFloat(nuEl.value);
+            const angle_rad = angle_deg * Math.PI / 180;
+            const v_eff = v_ms * Math.sin(angle_rad);
+
             let delta_v = 0;
             if (mitigation !== 'none') {
                 delta_v = parseFloat(deltaVEl.value) || 0;
@@ -441,9 +464,6 @@
             const volume_m3 = (4.0 / 3.0) * Math.PI * Math.pow(radius_m, 3);
             const mass_kg = density * volume_m3;
 
-            // density
-            // mass / volume = density
-
             // apply mitigation as small delta-v change (simple linear adjust of speed)
             // note: real deflection changes orbital phase and hit probability, this is just a demo
             const effective_v_ms = Math.max(0, v_ms - delta_v);
@@ -454,31 +474,35 @@
             // TNT equivalent: 1 megaton TNT ≈ 4.184e15 J
             const ke_megatons = ke_j / 4.184e15;
 
-            // simple crater diameter scaling (very approximate, demo only)
-            // crater_d_km roughly proportional to (ke_megatons)^(1/3)
-            const crater_km = ke_megatons > 0 ? 0.5 * Math.pow(ke_megatons, 1 / 3) : 0;
-            const crater_m = crater_km * 1000;
-
             // blast / affected radius (very rough): scale with (energy)^(1/3)
             const affected_km = ke_megatons > 0 ? 5 * Math.pow(ke_megatons, 1 / 3) : 0;
 
+            // Housen–Holsapple / Schmidt–Housen - Transient Crater Diameter
+            // replace v_ms with v_eff (effective impact velocity to factor in angle)
+            const pre_fac = d_m * k1;
+            const grav_reg = ((g * d_m) / (2 * (v_eff ** 2))) * ((p_t / p_i) ** (2 * nu / mu));
+            const str_reg = ((y_str / (p_t * (v_eff ** 2))) ** ((2 + mu) / 2)) * ((p_t / p_i) ** ((nu * (2 + mu)) / mu));
+            const exp = ((-1) * mu) / (2 + mu);
+            const transient_diam_m = pre_fac * ((grav_reg + str_reg) ** exp);
+            const transient_diam_km = transient_diam_m / 1000;
+
             // tsunami risk heuristic: if impact is within coastal band (placeholder), or if crater_km > threshold
-            // Here we just estimate a "risk level" for demo:
+            // NEED FIX: "risk level" for demo:
             let tsunamiRisk = 'None';
-            if (crater_km > 1) tsunamiRisk = 'Low';
-            if (crater_km > 1.5) tsunamiRisk = 'Medium';
-            if (crater_km > 5) tsunamiRisk = 'High';
+            if (transient_diam_km > 1) tsunamiRisk = 'Low';
+            if (transient_diam_km > 1.5) tsunamiRisk = 'Medium';
+            if (transient_diam_km > 5) tsunamiRisk = 'High';
 
             // update UI with formatted numbers
             energyText.textContent = `${ke_megatons.toFixed(3)} Mt TNT equiv`;
-            craterText.textContent = `${crater_km.toFixed(2)} km ≈ ${Math.round(crater_m)} m`;
-            radiusText.textContent = `${affected_km.toFixed(2)} km (approx)`;
+            craterText.textContent = `${transient_diam_km.toFixed(2)} km ≈ ${Math.round(transient_diam_m)} m`;
+            radiusText.textContent = `${affected_km.toFixed(2)} km (approx)`; // NEED FIX
             tsunamiText.textContent = tsunamiRisk;
 
 
             // Optionally: fire a custom event providing the raw numbers to 3D/map components
             const detail = {
-                mass_kg, ke_j, ke_megatons, crater_km, affected_km, inputs: {
+                mass_kg, ke_j, ke_megatons, transient_diam_km, affected_km, inputs: {
                     d_m, density, v_kms, angle_deg, mitigation, delta_v, timeToImpact: timeToImpact.value
                 }
             };

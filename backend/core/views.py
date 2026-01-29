@@ -55,7 +55,7 @@ def calcCollisionDiameter():
 
     # Geometry & kinematics
 
-    # D — Final crater diameter
+    # D — Transient crater diameter
     # d — Impactor (projectile) diameter
     # vᵢ — Impact velocity
 
@@ -63,7 +63,7 @@ def calcCollisionDiameter():
 
     # g — Gravitational acceleration of the target body
     # (Earth, Moon, Mars, asteroid, etc.)
-    # ρₜ — Target density
+    # ρₜ — Target density (p_t)
     # (density of the surface being hit)
     # ρᵢ — Impactor density
     # (density of the asteroid/meteor)
@@ -97,11 +97,11 @@ def calcCollisionDiameter():
     # Pre-factor
     pre_fac = d*k_1
 
-    # Gravity regime term
-    grav_reg = ((g*d)/(2*(v_i**2)))
+    # Gravity regime term [missing a piece]
+    grav_reg = ((g * d) / (2 * (v_i ** 2))) * ((p_t / p_i) ** (2 * nu / mu))
 
     # Strength regime term
-    str_reg = (y_str/(p_t*(v_i**2)))**((2+mu)/2) * (p_t/p_i)**((nu*(2+mu))/mu)
+    str_reg = ((y_str/(p_t*(v_i**2)))**((2+mu)/2)) * ((p_t/p_i)**((nu*(2+mu))/mu))
 
     # Exponent
     exp = ((-1)*mu)/(2+mu)
