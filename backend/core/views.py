@@ -1,53 +1,45 @@
 from django.shortcuts import render
-from django.http import HttpResponse
-from datetime import datetime
+from django.http import HttpResponse, JsonResponse
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Scenario, Meteor, Target
 
-class HomeView(TemplateView):
-    template_name = 'core/home.html'
+class SimulationView(TemplateView):
+    template_name = 'core/simulation.html'
 
-class IndexView(TemplateView):
-    template_name = 'core/index.html'
-    extra_content = {'today':datetime.today()}
+class DashboardView(TemplateView):
+    template_name = "core/dashboard.html"
 
-def scenario_view(request):
-    if request.method == "POST":
-        met_name = request.POST.get('met-name') or 'Impactor'
-        met_density = request.POST.get('met-density')
-        met_velocity = request.POST.get('velocity')
-        met_angle = request.POST.get('impact-angle')
-        met_diameter = request.POST.get('met-diameter')
-
+    def post(self, request):
         scenario = Scenario.objects.create()
 
-        meteor = Meteor.objects.create(
-            scenario = scenario,
-            name     = met_name,
-            diameter = met_diameter,
-            velocity = met_velocity,
-            density  = met_density,
-            angle    = met_angle,
-        )
-
-        target = Target.objects.create(
+        Meteor.objects.create(
             scenario=scenario,
-            name="Earth",
-            gravity=9.81,
-            density=5500,
-            k1 = request.POST.get('k1'),
-            mu = request.POST.get('mu'),
-            nu = request.POST.get('nu'),
-            material="rock",
-            material_strength=700000
+            name=request.POST.get("met-name"),
+            diameter=request.POST.get("met-diameter"),
+            velocity=request.POST.get("velocity"),
+            density=request.POST.get("met-density"),
+            angle=request.POST.get("impact-angle"),
         )
 
-        return render(request, "core/index.html")
-    
-    return render(request, "core/index.html")
+        Target.objects.create(
+            scenario=scenario,
+            name=request.POST.get("celestial-body"),
+            gravity=request.POST.get("gravity"),
+            density=request.POST.get("target-density"),
+            material=request.POST.get("target-material"),
+            material_strength=request.POST.get("material-str"),
+            k1=request.POST.get("k1"),
+            mu=request.POST.get("mu"),
+            nu=request.POST.get("nu"),
+        )
 
+        return JsonResponse({
+            "status": "ok",
+            "scenario_id": scenario.id
+        })
+    
         # Add material later
 
 def calcCollisionDiameter():

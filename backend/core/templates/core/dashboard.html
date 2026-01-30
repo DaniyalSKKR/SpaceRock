@@ -27,7 +27,7 @@
         <!-- Left column: controls -->
 
         <div class="col-lg-4 order-lg-1">
-            <form method="post" action="{% url 'core-submit' %}">
+            <form id="simulationForm" method="post">
                 {% csrf_token %}
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -36,7 +36,7 @@
                         <!-- Inputs -->
                         <div class="mb-3">
                             <label class="control-label" for="met-name">Meteor name</label>
-                            <input id="met-mame" class="form-control" type="text" value="Impactor"
+                            <input id="met-mame" name="met-name" class="form-control" type="text" value="Impactor"
                                 aria-label="Asteroid name">
                             <div class="muted-small">Name scenario.</div>
                         </div>
@@ -133,7 +133,7 @@
                                 </div>
                                 <div class="col-6">
                                     <label class="control-label" for="target-material"> Target Surface Material</label>
-                                    <select id="target-material" class="form-control"
+                                    <select id="target-material" name="target-material" class="form-control"
                                         aria-label="Material of target zone on the selected celestial body.">
                                         <option value="Crust">Rock (Non-porous)</option>
                                         <!-- <option value="Water">Water</option> -->
@@ -203,11 +203,8 @@
                             <ul class="ps-3">
                                 <li>Use <strong>Delta-v</strong> to simulate deflection opportunities.</li>
                                 <li>Click the <em>3D</em> or <em>Map</em> placeholders to load richer visualizations
-                                    (replace
-                                    placeholders with Three.js / Leaflet).</li>
-                                <li>Data integration: call NASA NEO API for orbital elements and USGS for topography
-                                    in your
-                                    backend view.</li>
+                                </li>
+
                             </ul>
                         </div>
                     </div>
@@ -231,7 +228,7 @@
                     <!-- Replace with Three.js canvas; keep placeholder for now -->
                     <div id="three-container" class="three-small-window" role="img" tabindex="0"
                         aria-label="3D trajectory visualization placeholder">
-                        <a href="{% url 'home' %}">
+                        <a href="{% url 'simulation' %}">
                             <button class="three-small-expand-btn">
                                 <img class="expand-btn" src="{% static 'images/expand-arrows.png' %}"
                                     alt="expand visual">
@@ -587,6 +584,33 @@
         volume.addEventListener('input', updateDensity);
         volume.addEventListener('change', updateDensity);
 
+    });
+
+</script>
+<script>
+    const form = document.getElementById("simulationForm");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        try {
+            const res = await fetch("{% url 'dashboard' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+                },
+                body: formData,
+            });
+
+            const data = await res.json();
+            console.log("Saved:", data);
+        } catch (err) {
+            console.error("Error:", err);
+        }
+
+        form.scrollIntoView();
     });
 
 </script>
