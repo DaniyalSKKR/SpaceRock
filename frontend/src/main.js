@@ -12,7 +12,7 @@ const scene = new THREE.Scene();
 // ---------------------
 const camera = new THREE.PerspectiveCamera(
 	75,
-	window.innerWidth / window.innerHeight,
+	container.clientWidth / container.clientHeight,
 	0.1,
 	1000,
 );
@@ -22,120 +22,124 @@ camera.position.z = 3;
 // Renderer
 // ---------------------
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-// renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 renderer.domElement.style.position = "absolute";
 renderer.domElement.style.zIndex = "1";
 container.appendChild(renderer.domElement);
 
-window.addEventListener("load", () => {
-	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-	renderer.setSize(container.clientWidth, container.clientHeight);
-
-	camera.aspect = container.clientWidth / container.clientHeight;
-	camera.updateProjectionMatrix();
-});
-
 // ---------------------
-// Orbit Controls
+// Controls
 // ---------------------
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
 // ---------------------
-// Lighting
+// Lighting (balanced + realistic)
 // ---------------------
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 5, 5);
-scene.add(light);
+
+// Sun light
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+sunLight.position.set(5, 3, 5);
+sunLight.castShadow = true;
+scene.add(sunLight);
+
+// Soft space bounce
+scene.add(new THREE.AmbientLight(0x111822, 0.12));
+
+// Rim light to reveal night side silhouette
+const rimLight = new THREE.DirectionalLight(0x6677aa, 0.22);
+rimLight.position.set(-5, 0, -5);
+scene.add(rimLight);
 
 // ---------------------
-// Canvas texture for globe
+// Paths
 // ---------------------
-const canvas = document.createElement("canvas");
-canvas.width = 2048;
-canvas.height = 1024;
-const ctx = canvas.getContext("2d");
-
-// Create Three.js texture immediately
-const dynamicTexture = new THREE.CanvasTexture(canvas);
-
-// ---------------------
-// Path config (Django or fallback for frontend)
-// ---------------------
-const DEV_PATHS = {
+const PATHS = window.APP_CONFIG || {
 	EARTH_TEXTURE: "/src/assets/earth_texture.jpg",
+	SPACE_TEXTURE: "/src/assets/stars_texture.jpg",
 	MARKER_IMAGE: "/src/assets/red_circle.png",
 };
 
-const PATHS = window.APP_CONFIG || DEV_PATHS;
+// ---------------------
+// Texture Loader
+// ---------------------
+const loader = new THREE.TextureLoader();
+
+const earthTexture = loader.load(PATHS.EARTH_TEXTURE);
+earthTexture.colorSpace = THREE.SRGBColorSpace;
+
+const spaceTexture = loader.load(PATHS.SPACE_TEXTURE);
+spaceTexture.colorSpace = THREE.SRGBColorSpace;
 
 // ---------------------
-// Load textures
+// Space background sphere
 // ---------------------
-const earthImg = new Image();
-earthImg.src = PATHS.EARTH_TEXTURE;
-earthImg.onload = () => {
-	ctx.drawImage(earthImg, 0, 0, canvas.width, canvas.height);
-	dynamicTexture.needsUpdate = true;
-};
-
-const markerImg = new Image();
-markerImg.src = PATHS.MARKER_IMAGE;
+const space = new THREE.Mesh(
+	new THREE.SphereGeometry(50, 64, 64),
+	new THREE.MeshBasicMaterial({
+		map: spaceTexture,
+		side: THREE.BackSide,
+	}),
+);
+scene.add(space);
 
 // ---------------------
-// Globe
+// Earth Globe
 // ---------------------
 const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
-const globeMaterial = new THREE.MeshStandardMaterial({ map: dynamicTexture });
+
+const globeMaterial = new THREE.MeshStandardMaterial({
+	map: earthTexture,
+	roughness: 1,
+	metalness: 0,
+});
+
 const globe = new THREE.Mesh(globeGeometry, globeMaterial);
+globe.castShadow = true;
+globe.receiveShadow = true;
 scene.add(globe);
 
 // ---------------------
-// Raycaster + Mouse
+// Atmosphere shell
 // ---------------------
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-// ---------------------
-// Click handler → draw marker
-// ---------------------
-window.addEventListener("click", (event) => {
-	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-	raycaster.setFromCamera(mouse, camera);
-	const intersects = raycaster.intersectObject(globe);
-
-	if (!intersects.length) return;
-
-	// Get UV coordinates
-	const uv = intersects[0].uv;
-	const x = uv.x * canvas.width;
-	const y = (1 - uv.y) * canvas.height; // flip Y for canvas
-
-	// Draw marker image centered at clicked position
-	const markerSize = 32; // adjust size
-	ctx.drawImage(
-		markerImg,
-		x - markerSize / 2,
-		y - markerSize / 2,
-		markerSize,
-		markerSize,
-	);
-
-	// Update Three.js texture
-	dynamicTexture.needsUpdate = true;
+const atmosphereMaterial = new THREE.ShaderMaterial({
+	vertexShader: `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+	fragmentShader: `
+    varying vec3 vNormal;
+    void main() {
+      float intensity = pow(0.6 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+      gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
+    }
+  `,
+	blending: THREE.AdditiveBlending,
+	side: THREE.BackSide,
+	transparent: true,
 });
 
+const atmosphere = new THREE.Mesh(
+	new THREE.SphereGeometry(1.05, 64, 64),
+	atmosphereMaterial,
+);
+scene.add(atmosphere);
+
 // ---------------------
-// Handle window resize
+// Resize handling
 // ---------------------
 window.addEventListener("resize", () => {
-	const width = container.clientWidth;
-	const height = container.clientHeight;
-
-	renderer.setSize(width, height);
-	camera.aspect = width / height;
+	const w = container.clientWidth;
+	const h = container.clientHeight;
+	renderer.setSize(w, h);
+	camera.aspect = w / h;
 	camera.updateProjectionMatrix();
 });
 
@@ -144,7 +148,10 @@ window.addEventListener("resize", () => {
 // ---------------------
 function animate() {
 	requestAnimationFrame(animate);
+
 	globe.rotation.y += 0.001;
+	atmosphere.rotation.y += 0.001;
+
 	controls.update();
 	renderer.render(scene, camera);
 }
