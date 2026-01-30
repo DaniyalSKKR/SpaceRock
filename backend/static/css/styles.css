@@ -1,4 +1,6 @@
-/* Styles */
+body {
+	background-color: #f0f4f8; /* light blue-gray */
+}
 
 #map-placeholder {
 	background: linear-gradient(180deg, #0b1220, #102033);
@@ -51,7 +53,6 @@
 	height: 100%; /* Image takes full height of the 20px button */
 }
 
-/* Use later */
 .three-large-window {
 	width: 100vw;
 	height: 100vh;
@@ -67,6 +68,8 @@
 }
 
 .results-card {
+	font-family: monospace; /* lab-style readout */
+	transition: border 0.3s ease;
 	min-height: 80px;
 }
 

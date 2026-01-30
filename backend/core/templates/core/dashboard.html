@@ -12,7 +12,7 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="h3 mb-0">Meteor Madness — Interactive Simulation</h1>
+            <h1 class="h3 mb-0 text-primary">Meteor Madness — Interactive Simulation</h1>
             <p class="muted-small mb-0">Explore impact scenarios, visualize trajectories, and test mitigation
                 strategies.</p>
         </div>
@@ -22,21 +22,20 @@
             <button class="btn btn-primary mb-2" id="simulateBtn">Run Simulation</button>
         </div>
     </div>
+    <form id="simulationForm" method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <!-- Left column: controls -->
+            <div class="col-lg-4 order-lg-1">
 
-    <div class="row g-3">
-        <!-- Left column: controls -->
-
-        <div class="col-lg-4 order-lg-1">
-            <form id="simulationForm" method="post">
-                {% csrf_token %}
-                <div class="card shadow-sm">
+                <div class="card mb-3 shadow bg-light bg-gradient">
                     <div class="card-body">
-                        <h5 class="card-title">Meteor Metrics</h5>
+                        <h5 class="card-title text-primary">Meteor Metrics</h5>
 
                         <!-- Inputs -->
                         <div class="mb-3">
                             <label class="control-label" for="met-name">Meteor name</label>
-                            <input id="met-mame" name="met-name" class="form-control" type="text" value="Impactor"
+                            <input id="met-name" name="met-name" class="form-control" type="text" value="Impactor"
                                 aria-label="Asteroid name">
                             <div class="muted-small">Name scenario.</div>
                         </div>
@@ -113,7 +112,7 @@
 
                         <hr>
                         <!-- Target Metrics -->
-                        <h5 class="card-title">Target Metrics</h5>
+                        <h5 class="card-title text-primary">Target Metrics</h5>
                         <div class="mb-3">
                             <label class="control-label" for="celestial-body">Celestial Body</label>
                             <select id="celestial-body" name="celestial-body" class="form-select"
@@ -187,27 +186,15 @@
 
                         <hr>
 
-
                         <!-- Scenario controls -->
                         <div class="d-grid gap-2">
                             <!-- <button type="button" id="simulateBtn2" class="btn btn-primary">Simulate Scenario</button> -->
-                            <button type="submit" id="simulateBtn2" class="btn btn-primary">Simulate Scenario</button>
+                            <button type="button" id="simulateBtn2" class="btn btn-primary">Simulate Scenario</button>
                             <button type="button" id="resetBtn" class="btn btn-outline-secondary">Reset Inputs</button>
                         </div>
                     </div>
 
-                    <!-- Explanations / Quick tips -->
-                    <div class="card mt-3 shadow-sm">
-                        <div class="card-body">
-                            <h6>Quick tips</h6>
-                            <ul class="ps-3">
-                                <li>Use <strong>Delta-v</strong> to simulate deflection opportunities.</li>
-                                <li>Click the <em>3D</em> or <em>Map</em> placeholders to load richer visualizations
-                                </li>
 
-                            </ul>
-                        </div>
-                    </div>
 
                     <!-- Dots world map -->
                     <!-- <div class="card mt-3 shadow-sm">
@@ -217,88 +204,92 @@
                     </div>
                         </div> -->
                 </div>
-            </form>
-        </div>
 
-        <!-- Middle column: visualizations - Trajectory / 3D View -->
-        <div class="col-lg-5 order-lg-2">
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Trajectory / 3D View</h5>
-                    <!-- Replace with Three.js canvas; keep placeholder for now -->
-                    <div id="three-container" class="three-small-window" role="img" tabindex="0"
-                        aria-label="3D trajectory visualization placeholder">
-                        <a href="{% url 'simulation' %}">
-                            <button class="three-small-expand-btn">
-                                <img class="expand-btn" src="{% static 'images/expand-arrows.png' %}"
-                                    alt="expand visual">
-                            </button>
-                        </a>
+                <!-- Explanations / Quick tips -->
+                <div class="card mt-3 shadow bg-light bg-gradient">
+                    <div class="card-body">
+                        <h6>Quick tips</h6>
+                        <ul class="ps-3">
+                            <li>Use <strong>Delta-v</strong> to simulate deflection opportunities.</li>
+                            <li>Click the <em>3D</em> or <em>Map</em> placeholders to load richer visualizations
+                            </li>
+
+                        </ul>
                     </div>
                 </div>
             </div>
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Impact Map</h5>
-                    <!-- Replace with an interactive map (Leaflet / Mapbox) -->
-                    <div id="map-placeholder" role="img" tabindex="0" aria-label="Impact map placeholder">
-                        <div>
-                            <div class="h5">Map placeholder</div>
-                            <div class="muted-small">Replace with Leaflet + USGS elevation / tsunami layers.
+
+            <!-- Middle column: visualizations - Trajectory / 3D View -->
+            <div class="col-lg-5 order-lg-2">
+                <div class="card mb-3 shadow bg-light bg-gradient">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Trajectory / 3D View</h5>
+                        <!-- Replace with Three.js canvas; keep placeholder for now -->
+                        <div id="three-container" class="three-small-window" role="img" tabindex="0"
+                            aria-label="3D trajectory visualization placeholder">
+                            <a href="{% url 'simulation' %}">
+                                <button type="button" class="three-small-expand-btn">
+                                    <img class="expand-btn" src="{% static 'images/expand-arrows.png' %}"
+                                        alt="expand visual">
+                                </button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-3 shadow bg-light bg-gradient">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Impact Map</h5>
+                        <!-- Replace with an interactive map (Leaflet / Mapbox) -->
+                        <div id="map-placeholder" role="img" tabindex="0" aria-label="Impact map placeholder">
+                            <div>
+                                <div class="h5">Map placeholder</div>
+                                <div class="muted-small">Replace with Leaflet + USGS elevation / tsunami layers.
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Right column: results and controls -->
-        <div class="col-lg-3 order-lg-3">
+            <!-- Right column: results and controls -->
+            <div class="col-lg-3 order-lg-3">
 
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Results</h5>
+                <div class="card mb-3 shadow bg-light bg-gradient">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Results</h5>
 
-                    <div class="results-card">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="text-muted small">Kinetic Energy</div>
-                                <div id="energyText" class="fs-5 fw-600">—</div>
-                            </div>
-                            <div>
-                                <i class="bi bi-lightning-charge fs-3"></i>
-                            </div>
+                        <div class="results-card p-2">
+                            <div class="text-muted small">Kinetic Energy</div>
+                            <div id="energyText" class="fs-5 fw-600">—</div>
+                        </div>
+
+                        <div class="results-card p-2 ">
+                            <div class="text-muted small">Transient Crater Diameter</div>
+                            <div id="craterText" class="fs-5 fw-600">—</div>
+                        </div>
+
+                        <div class="results-card p-2">
+                            <div class="text-muted small">Blast / Affected Radius</div>
+                            <div id="radiusText" class="fs-5 fw-600">—</div>
+                        </div>
+
+                        <div class="results-card p-2">
+                            <div class="text-muted small">Tsunami Risk</div>
+                            <div id="tsunamiText" class="fs-6">—</div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-grid">
+                            <button id="shareBtn" type="submit" class="btn btn-outline-primary">Save Scenario</button>
+                            <!-- <a href="#" id="fetchDataLink" class="btn btn-link small mt-2">Fetch NASA / USGS
+                            data</a> -->
                         </div>
                     </div>
-
-                    <div class="results-card">
-                        <div class="text-muted small">Transient Crater Diameter</div>
-                        <div id="craterText" class="fs-5 fw-600">—</div>
-
-                    </div>
-
-                    <div class="results-card">
-                        <div class="text-muted small">Blast / Affected Radius</div>
-                        <div id="radiusText" class="fs-5 fw-600">—</div>
-                    </div>
-
-                    <div class="results-card">
-                        <div class="text-muted small">Tsunami Risk</div>
-                        <div id="tsunamiText" class="fs-6">—</div>
-                    </div>
-
-                    <hr>
-
-                    <div class="d-grid">
-                        <button id="shareBtn" class="btn btn-outline-primary">Save / Share Scenario</button>
-                        <a href="#" id="fetchDataLink" class="btn btn-link small mt-2">Fetch NASA / USGS
-                            data</a>
-                    </div>
                 </div>
-            </div>
 
-            <!-- Timeline / mitigation slider -->
-            <div class="card shadow-sm mb-3">
+                <!-- Timeline / mitigation slider -->
+                <!-- <div class="card mb-3 shadow bg-light">
                 <div class="card-body">
                     <h6>Timeline & Mitigation</h6>
                     <label class="form-label">Time to impact (days)</label>
@@ -309,10 +300,10 @@
                         <small class="muted-small">Shorter time = less deflection margin</small>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
-            <!-- Radar -->
-            <!-- <div class="card shadow-sm mb-3 radar">
+                <!-- Radar -->
+                <!-- <div class="card shadow-sm mb-3 radar">
                 <div class="card-body">
                     <div class="loader">
                         <span></span>
@@ -326,9 +317,11 @@
 
                 </div>
             </div> -->
+            </div>
         </div>
-    </div>
+    </form>
 </div>
+
 
 <!-- About modal -->
 <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
@@ -340,11 +333,8 @@
             </div>
             <div class="modal-body">
                 <p>This prototype demonstrates an integrated UI for exploring asteroid impact scenarios using
-                    NASA
-                    and
-                    USGS data. It focuses on clarity and accessibility while allowing room for more rigorous
-                    physics
-                    backends and richer visualizations (Three.js, Leaflet, D3).</p>
+                    NASA and USGS data. It focuses on clarity and accessibility while allowing room for more rigorous
+                    physics backends and richer visualizations (Three.js, Leaflet, D3).</p>
                 <h6>Where to plug real data</h6>
                 <ul>
                     <li><strong>NASA NEO API:</strong> Pull orbital elements and physical parameters in your
@@ -356,10 +346,6 @@
                     <li><strong>Back-end simulation:</strong> Implement orbital propagation and impact physics
                         server-side (Python), return results to client for visualization & sharing.</li>
                 </ul>
-                <h6>Accessibility & UX</h6>
-                <p>All controls include labels, keyboard focus, and descriptive text. For production, add ARIA
-                    live
-                    regions for simulation updates, colorblind palettes, and keyboard-only paths.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -395,8 +381,8 @@
         const mitigationEl = document.getElementById('mitigation');
         const deltaVRow = document.getElementById('deltaVRow');
         const deltaVEl = document.getElementById('deltaV');
-        const timeToImpact = document.getElementById('timeToImpact');
-        const timeVal = document.getElementById('timeVal');
+        // const timeToImpact = document.getElementById('timeToImpact');
+        // const timeVal = document.getElementById('timeVal');
 
         // Target Metrics
         const gravityEl = document.getElementById('gravity');
@@ -421,9 +407,9 @@
             deltaVRow.style.display = (e.target.value === 'none') ? 'none' : 'block';
         });
 
-        timeToImpact.addEventListener('input', () => {
-            timeVal.textContent = timeToImpact.value + ' days';
-        });
+        // timeToImpact.addEventListener('input', () => {
+        //     timeVal.textContent = timeToImpact.value + ' days';
+        // });
 
         function computeAndShow() {
             // read inputs
@@ -498,9 +484,10 @@
 
 
             // Optionally: fire a custom event providing the raw numbers to 3D/map components
+            // Temporarily removed time to impact
             const detail = {
                 mass_kg, ke_j, ke_megatons, transient_diam_km, affected_km, inputs: {
-                    d_m, density, v_kms, angle_deg, mitigation, delta_v, timeToImpact: timeToImpact.value
+                    d_m, density, v_kms, angle_deg, mitigation, delta_v
                 }
             };
             document.dispatchEvent(new CustomEvent('sim:results', { detail }));
@@ -521,8 +508,8 @@
             mitigationEl.value = 'none';
             deltaVRow.style.display = 'none';
             deltaVEl.value = 0.5;
-            timeToImpact.value = 90;
-            timeVal.textContent = '90 days';
+            // timeToImpact.value = 90;
+            // timeVal.textContent = '90 days';
             energyText.textContent = '—';
             craterText.textContent = '—';
             radiusText.textContent = '—';
@@ -532,7 +519,6 @@
         // Example: how an embedded 3D/Map component might listen for sim results:
         document.addEventListener('sim:results', (e) => {
             // e.detail contains numbers you can animate in Three.js or draw on Leaflet
-            // Replace with actual rendering calls.
             console.log('Sim results for 3D/map:', e.detail);
         });
 
