@@ -4,17 +4,23 @@
 {% block title %}Impactor-2025 Simulator | Spacerock{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 {% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <!-- Header -->
+
+    <!-- ================= Header ================= -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="h3 mb-0 text-primary">Meteor Madness — Interactive Simulation</h1>
-            <p class="muted-small mb-0">Explore impact scenarios, visualize trajectories, and test mitigation
-                strategies.</p>
+            <p class="muted-small mb-0">
+                Explore impact scenarios, visualize trajectories, and test mitigation strategies.
+            </p>
         </div>
         <div>
             <button class="btn btn-outline-primary me-2 mb-2" data-bs-toggle="modal"
@@ -22,211 +28,202 @@
             <button class="btn btn-primary mb-2" id="simulateBtn">Run Simulation</button>
         </div>
     </div>
+
+    <!-- ================= Simulation Form ================= -->
     <form id="simulationForm" method="post">
         {% csrf_token %}
         <div class="row g-3">
-            <!-- Left column: controls -->
+
+            <!-- -------- Left Column: Controls -------- -->
             <div class="col-lg-4 order-lg-1">
 
+                <!-- Meteor Metrics Card -->
                 <div class="card mb-3 shadow bg-light bg-gradient">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Meteor Metrics</h5>
 
-                        <!-- Inputs -->
+                        <!-- Meteor Name -->
                         <div class="mb-3">
-                            <label class="control-label" for="met-name">Meteor name</label>
+                            <label for="met-name" class="form-label">Meteor name</label>
                             <input id="met-name" name="met-name" class="form-control" type="text" value="Impactor"
                                 aria-label="Asteroid name">
                             <div class="muted-small">Name scenario.</div>
                         </div>
 
-                        <div class="d-flex row gx-2">
+                        <!-- Diameter & Density -->
+                        <div class="row gx-2">
                             <div class="col-6 mb-3">
-                                <label class="control-label" for="met-diameter">Diameter (m)</label>
+                                <label for="met-diameter" class="form-label">Diameter (m)</label>
                                 <input id="met-diameter" name="met-diameter" class="form-control" type="number"
                                     min="0.1" step="0.1" value="50" aria-label="Asteroid diameter in meters">
                                 <div class="muted-small">Enter object diameter in meters.</div>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="control-label" for="met-density">Density (kg/m³)</label>
+                                <label for="met-density" class="form-label">Density (kg/m³)</label>
                                 <div class="d-flex align-items-center gap-2">
                                     <input id="met-density" name="met-density" class="form-control" type="number"
                                         min="500" step="10" value="3000" aria-label="Asteroid density">
-                                    <button type="button" class="expand-density border-0 rounded-2"><img class="p-2"
-                                            src="{% static 'images/plus.png' %}"></button>
+                                    <button type="button" class="expand-density border-0 rounded-2">
+                                        <img class="p-2" src="{% static 'images/plus.png' %}" alt="expand density">
+                                    </button>
                                 </div>
-                                <div class="muted-small">Typical rock ~2500-3500 kg/m³.</div>
+                                <div class="muted-small">Typical rock ~2500–3500 kg/m³.</div>
                             </div>
                         </div>
 
+                        <!-- Volume & Mass (Expandable) -->
                         <div class="row gx-2 d-none" id="volume-mass-row">
                             <div class="col-6 mb-3">
-                                <label class="control-label" for="volume">Volume (m³)</label>
+                                <label for="volume" class="form-label">Volume (m³)</label>
                                 <input id="volume" class="form-control" type="number" step="1" value="1000"
-                                    aria-label="Volume measured in cubic meters">
+                                    aria-label="Volume of asteroid">
                                 <div class="muted-small">Approx volume of asteroid.</div>
                             </div>
                             <div class="col-6 mb-3">
-                                <label class="control-label" for="mass">Mass (kg)</label>
+                                <label for="mass" class="form-label">Mass (kg)</label>
                                 <div class="d-flex align-items-center gap-2">
                                     <input id="mass" name="mass" class="form-control" type="number" step="10"
-                                        value="30000000" aria-label="Mass in kilograms">
-                                    <button type="button" id='minimize-vol-mass'
-                                        class="minimize-row border-0 rounded-2"><img class="p-2"
-                                            src="{% static 'images/minus.png' %}"></button>
+                                        value="30000000" aria-label="Mass of asteroid">
+                                    <button type="button" id="minimize-vol-mass"
+                                        class="minimize-row border-0 rounded-2">
+                                        <img class="p-2" src="{% static 'images/minus.png' %}" alt="minimize mass">
+                                    </button>
                                 </div>
                                 <div class="muted-small">Approx mass of asteroid.</div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="control-label" for="velocity">Velocity (km/s)</label>
-                            <input id="velocity" name="velocity" class="form-control" type="number" min="1" step="0.1"
-                                value="20" aria-label="Asteroid velocity in kilometers per second">
-                            <div class="muted-small">Relative impact speed at encounter (km/s).</div>
+                        <!-- Velocity & Impact Angle -->
+                        <div class="row gx-2">
+                            <div class="col-6 mb-3">
+                                <label for="velocity" class="form-label">Velocity (km/s)</label>
+                                <input id="velocity" name="velocity" class="form-control" type="number" min="1"
+                                    step="0.1" value="20" aria-label="Asteroid velocity in km/s">
+                                <div class="muted-small">Relative impact speed at encounter (km/s).</div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label for="impact-angle" class="form-label">Impact angle (°)</label>
+                                <input id="impact-angle" name="impact-angle" class="form-control" type="number" min="0"
+                                    max="90" step="1" value="45" aria-label="Impact angle in degrees">
+                                <div class="muted-small">Angle from horizontal; 90° = vertical.</div>
+                            </div>
                         </div>
 
+                        <!-- Mitigation -->
                         <div class="mb-3">
-                            <label class="control-label" for="impact-angle">Impact angle (°)</label>
-                            <input id="impact-angle" name="impact-angle" class="form-control" type="number" min="0"
-                                max="90" step="1" value="45" aria-label="Impact angle in degrees">
-                            <div class="muted-small">Angle from horizontal; 90° = vertical.</div>
-                        </div>
-
-                        <!-- Mitigation: NEED FIX-->
-                        <div class="mb-3">
-                            <label class="control-label" for="mitigation">Mitigation</label>
+                            <label for="mitigation" class="form-label">Mitigation</label>
                             <select id="mitigation" class="form-select" aria-label="Mitigation strategy">
                                 <option value="none" selected>None</option>
-                                <option value="kinetic">Kinetic impactor (delta-v)</option>
-                                <option value="gravity">Gravity tractor (approx delta-v)</option>
+                                <option value="kinetic">Kinetic impactor (Δv)</option>
+                                <option value="gravity">Gravity tractor (approx Δv)</option>
                             </select>
                         </div>
 
                         <div class="mb-3" id="deltaVRow" style="display:none;">
-                            <label class="control-label" for="deltaV">Delta-v (m/s)</label>
+                            <label for="deltaV" class="form-label">Delta-v (m/s)</label>
                             <input id="deltaV" class="form-control" type="number" step="0.01" value="0.5"
-                                aria-label="Delta v in meters per second">
-                            <div class="muted-small">Approx extra velocity applied by mitigation before impact.</div>
+                                aria-label="Delta-v in meters per second">
+                            <div class="muted-small">Extra velocity applied by mitigation before impact.</div>
                         </div>
 
                         <hr>
+
                         <!-- Target Metrics -->
                         <h5 class="card-title text-primary">Target Metrics</h5>
+
                         <div class="mb-3">
-                            <label class="control-label" for="celestial-body">Celestial Body</label>
+                            <label for="celestial-body" class="form-label">Celestial Body</label>
                             <select id="celestial-body" name="celestial-body" class="form-select"
                                 aria-label="Celestial Body Options">
                                 <option value="Earth" selected>Earth</option>
-                                <!-- <option value="Moon">Moon</option>
-                            <option value="Mars">Mars</option> -->
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <div class="row">
-                                <div class="col-6">
-                                    <label class="control-label" for="gravity">Gravity (m/s)²</label>
-                                    <input id="gravity" name="gravity" class="form-control readonly-grey" type="number"
-                                        value="9.81" readonly>
-                                    <div class="muted-small">Gravity of celestial body.</div>
-                                </div>
-                                <div class="col-6">
-                                    <label class="control-label" for="target-material"> Target Surface Material</label>
-                                    <select id="target-material" name="target-material" class="form-control"
-                                        aria-label="Material of target zone on the selected celestial body.">
-                                        <option value="Crust">Rock (Non-porous)</option>
-                                        <!-- <option value="Water">Water</option> -->
-                                    </select>
-                                    <div class="muted-small">Material of target zone on celestial body.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="row">
-                                <div class="col-6">
-                                    <label class="control-label" for="target-density">Density (kg/m³)</label>
-                                    <input id="target-density" name="target-density" class="form-control readonly-grey"
-                                        type="number" value="2700" step="0.1" readonly>
-                                    <div class="muted-small">Density of the surface being hit.</div>
-                                </div>
 
-                                <div class="col-6">
-                                    <label class="control-label" for="material-str">Material Strength (Pa)</label>
-                                    <input id="material-str" name="material-str" class="form-control readonly-grey"
-                                        type="number" value="10000000" step="100000" readonly>
-                                    <div class="muted-small">Target material strength.</div>
-                                </div>
+                        <div class="row gx-2 mb-3">
+                            <div class="col-6">
+                                <label for="gravity" class="form-label">Gravity (m/s²)</label>
+                                <input id="gravity" name="gravity" class="form-control readonly-grey" type="number"
+                                    value="9.81" readonly>
+                                <div class="muted-small">Gravity of celestial body.</div>
+                            </div>
+                            <div class="col-6">
+                                <label for="target-material" class="form-label">Target Surface Material</label>
+                                <select id="target-material" name="target-material" class="form-select"
+                                    aria-label="Material of target zone">
+                                    <option value="Crust">Rock (Non-porous)</option>
+                                </select>
+                                <div class="muted-small">Material of target zone.</div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <div class="row">
-                                <div class="col-4">
-                                    <label class="control-label" for="mu">μ</label>
-                                    <input id="mu" name="mu" class="form-control readonly-grey" type="number"
-                                        value="0.55" step="0.01" readonly>
-                                    <div class="muted-small">Gravity-scaling exponent.</div>
-                                </div>
+                        <!-- Material Properties -->
+                        <div class="row gx-2 mb-3">
+                            <div class="col-6">
+                                <label for="target-density" class="form-label">Density (kg/m³)</label>
+                                <input id="target-density" name="target-density" class="form-control readonly-grey"
+                                    type="number" value="2700" readonly>
+                                <div class="muted-small">Density of target surface.</div>
+                            </div>
+                            <div class="col-6">
+                                <label for="material-str" class="form-label">Material Strength (Pa)</label>
+                                <input id="material-str" name="material-str" class="form-control readonly-grey"
+                                    type="number" value="10000000" readonly>
+                                <div class="muted-small">Target material strength.</div>
+                            </div>
+                        </div>
 
-                                <div class="col-4">
-                                    <label class="control-label" for="k1">K₁</label>
-                                    <input id="k1" name='k1' class="form-control readonly-grey" type="number"
-                                        value="0.93" step="0.01" readonly>
-                                    <div class="muted-small">Dimensionless scaling constant.</div>
-                                </div>
-
-                                <div class="col-4">
-                                    <label class="control-label" for="nu">ν</label>
-                                    <input id="nu" name="nu" class="form-control readonly-grey" type="number"
-                                        value="0.40" step="0.01" readonly>
-                                    <div class="muted-small">Density-scaling exponent.</div>
-                                </div>
+                        <!-- Scaling Constants -->
+                        <div class="row gx-2 mb-3">
+                            <div class="col-4">
+                                <label for="mu" class="form-label">μ</label>
+                                <input id="mu" name="mu" class="form-control readonly-grey" type="number" value="0.55"
+                                    readonly>
+                                <div class="muted-small">Gravity-scaling exponent.</div>
+                            </div>
+                            <div class="col-4">
+                                <label for="k1" class="form-label">K₁</label>
+                                <input id="k1" name="k1" class="form-control readonly-grey" type="number" value="0.93"
+                                    readonly>
+                                <div class="muted-small">Dimensionless scaling constant.</div>
+                            </div>
+                            <div class="col-4">
+                                <label for="nu" class="form-label">ν</label>
+                                <input id="nu" name="nu" class="form-control readonly-grey" type="number" value="0.40"
+                                    readonly>
+                                <div class="muted-small">Density-scaling exponent.</div>
                             </div>
                         </div>
 
                         <hr>
 
-                        <!-- Scenario controls -->
+                        <!-- Scenario Buttons -->
                         <div class="d-grid gap-2">
-                            <!-- <button type="button" id="simulateBtn2" class="btn btn-primary">Simulate Scenario</button> -->
                             <button type="button" id="simulateBtn2" class="btn btn-primary">Simulate Scenario</button>
                             <button type="button" id="resetBtn" class="btn btn-outline-secondary">Reset Inputs</button>
                         </div>
                     </div>
-
-
-
-                    <!-- Dots world map -->
-                    <!-- <div class="card mt-3 shadow-sm">
-                    <div class="card-body dots-card" style="background-color: black;">
-                        <div id="dots-map" class="mt-3">
-                        </div>
-                    </div>
-                        </div> -->
                 </div>
 
-                <!-- Explanations / Quick tips -->
+                <!-- Quick Tips Card -->
                 <div class="card mt-3 shadow bg-light bg-gradient">
                     <div class="card-body">
                         <h6>Quick tips</h6>
-                        <ul class="ps-3">
+                        <ul class="ps-3 mb-0">
                             <li>Use <strong>Delta-v</strong> to simulate deflection opportunities.</li>
-                            <li>Click the <em>3D</em> or <em>Map</em> placeholders to load richer visualizations
-                            </li>
-
+                            <li>Click the <em>3D</em> or <em>Map</em> placeholders to load richer visualizations.</li>
                         </ul>
                     </div>
                 </div>
             </div>
 
-            <!-- Middle column: visualizations - Trajectory / 3D View -->
+            <!-- -------- Middle Column: Visualizations -------- -->
             <div class="col-lg-5 order-lg-2">
+                <!-- Trajectory / 3D -->
                 <div class="card mb-3 shadow bg-light bg-gradient">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Trajectory / 3D View</h5>
-                        <!-- Replace with Three.js canvas; keep placeholder for now -->
                         <div id="three-container" class="three-small-window" role="img" tabindex="0"
-                            aria-label="3D trajectory visualization placeholder">
+                            aria-label="3D trajectory placeholder">
                             <a href="{% url 'simulation' %}">
                                 <button type="button" class="three-small-expand-btn">
                                     <img class="expand-btn" src="{% static 'images/expand-arrows.png' %}"
@@ -236,24 +233,20 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Impact Map -->
                 <div class="card mb-3 shadow bg-light bg-gradient">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Impact Map</h5>
-                        <!-- Replace with an interactive map (Leaflet / Mapbox) -->
-                        <div id="map-placeholder" role="img" tabindex="0" aria-label="Impact map placeholder">
-                            <div>
-                                <div class="h5">Map placeholder</div>
-                                <div class="muted-small">Replace with Leaflet + USGS elevation / tsunami layers.
-                                </div>
-                            </div>
+                        <div id="map-holder" tabindex="0" aria-label="Impact map placeholder">
+                            <div id="map"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right column: results and controls -->
+            <!-- -------- Right Column: Results -------- -->
             <div class="col-lg-3 order-lg-3">
-
                 <div class="card mb-3 shadow bg-light bg-gradient">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Results</h5>
@@ -263,7 +256,7 @@
                             <div id="energyText" class="fs-5 fw-600">—</div>
                         </div>
 
-                        <div class="results-card p-2 ">
+                        <div class="results-card p-2">
                             <div class="text-muted small">Transient Crater Diameter</div>
                             <div id="craterText" class="fs-5 fw-600">—</div>
                         </div>
@@ -282,48 +275,16 @@
 
                         <div class="d-grid">
                             <button id="shareBtn" type="submit" class="btn btn-outline-primary">Save Scenario</button>
-                            <!-- <a href="#" id="fetchDataLink" class="btn btn-link small mt-2">Fetch NASA / USGS
-                            data</a> -->
                         </div>
                     </div>
                 </div>
-
-                <!-- Timeline / mitigation slider -->
-                <!-- <div class="card mb-3 shadow bg-light">
-                <div class="card-body">
-                    <h6>Timeline & Mitigation</h6>
-                    <label class="form-label">Time to impact (days)</label>
-                    <input id="timeToImpact" type="range" class="form-range" min="1" max="365" value="90"
-                        aria-label="Time to impact in days">
-                    <div class="d-flex justify-content-between">
-                        <small id="timeVal">90 days</small>
-                        <small class="muted-small">Shorter time = less deflection margin</small>
-                    </div>
-                </div>
-            </div> -->
-
-                <!-- Radar -->
-                <!-- <div class="card shadow-sm mb-3 radar">
-                <div class="card-body">
-                    <div class="loader">
-                        <span></span>
-
-                        <div id="dot-1" class="dot"></div>
-                        <div id="dot-2" class="dot"></div>
-                        <div id="dot-3" class="dot"></div>
-                        <div id="dot-4" class="dot"></div>
-                        <div id="dot-5" class="dot"></div>
-                    </div>
-
-                </div>
-            </div> -->
             </div>
+
         </div>
     </form>
 </div>
 
-
-<!-- About modal -->
+<!-- ================= About Modal ================= -->
 <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -332,19 +293,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>This prototype demonstrates an integrated UI for exploring asteroid impact scenarios using
-                    NASA and USGS data. It focuses on clarity and accessibility while allowing room for more rigorous
-                    physics backends and richer visualizations (Three.js, Leaflet, D3).</p>
+                <p>This prototype demonstrates an integrated UI for exploring asteroid impact scenarios using NASA and
+                    USGS data. It focuses on clarity and accessibility while allowing room for more rigorous physics
+                    backends and richer visualizations (Three.js, Leaflet, D3).</p>
                 <h6>Where to plug real data</h6>
                 <ul>
-                    <li><strong>NASA NEO API:</strong> Pull orbital elements and physical parameters in your
-                        Django
-                        view/backend, then send them to the template via context or an API endpoint.</li>
-                    <li><strong>USGS:</strong> Use elevation (DEM), tsunami zones, and seismic layers for map
-                        overlays
-                        (serve tiles or vector tiles to the front end).</li>
+                    <li><strong>NASA NEO API:</strong> Pull orbital elements and physical parameters in your Django
+                        backend and send them to the template.</li>
+                    <li><strong>USGS:</strong> Use DEM, tsunami zones, and seismic layers for map overlays.</li>
                     <li><strong>Back-end simulation:</strong> Implement orbital propagation and impact physics
-                        server-side (Python), return results to client for visualization & sharing.</li>
+                        server-side (Python) and return results for visualization.</li>
                 </ul>
             </div>
             <div class="modal-footer">
@@ -362,19 +320,33 @@
         MARKER_IMAGE: "{% static 'textures/red_circle.png' %}"
     };
 </script>
+
 <script type="module" src="{% static 'build/main.js' %}"></script>
+
 <script>
     /*
-      Basic front-end simulation logic (approximate):
-      - Calculates mass from diameter and density (sphere)
-      - KE = 0.5 * m * v^2
-      - TNT equiv (megatons) = KE / 4.184e15
-      - Crater & radius: simple scaling approximations for demo only
-      Replace these with rigorous physics on the backend for production.
+    =====================================================
+    Front-End Impact Simulation (Educational Approx.)
+    -----------------------------------------------------
+    Physics implemented:
+    
+    1) Volume (sphere): V = (4/3) π r³
+    2) Mass: m = ρ V
+    3) Total kinetic energy: KE = ½ m v²
+    4) TNT equivalent: 1 Mt TNT = 4.184 × 10¹⁵ J
+    5) Effective vertical velocity for crater coupling: v_eff = v sin(θ)
+    6) Transient crater diameter: Schmidt–Housen / Holsapple π-scaling
+    
+    Notes:
+    - Blast radius uses vertical fraction of total energy
+    - Crater size uses vertical velocity
+    - Mitigation via Δv is illustrative only
+    =====================================================
     */
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Meteor Metrics
+
+        // ----- INPUT ELEMENTS -----
         const diameterEl = document.getElementById('met-diameter');
         const densityEl = document.getElementById('met-density');
         const velocityEl = document.getElementById('velocity');
@@ -382,125 +354,103 @@
         const mitigationEl = document.getElementById('mitigation');
         const deltaVRow = document.getElementById('deltaVRow');
         const deltaVEl = document.getElementById('deltaV');
-        // const timeToImpact = document.getElementById('timeToImpact');
-        // const timeVal = document.getElementById('timeVal');
 
-        // Target Metrics
         const gravityEl = document.getElementById('gravity');
-        const targetMaterialEl = document.getElementById('target-material');
         const targetDensityEl = document.getElementById('target-density');
         const targetMatStrEl = document.getElementById('material-str');
         const muEl = document.getElementById('mu');
         const nuEl = document.getElementById('nu');
         const k1El = document.getElementById('k1');
 
-        // Scenario Metrics (Results)
         const energyText = document.getElementById('energyText');
         const craterText = document.getElementById('craterText');
         const radiusText = document.getElementById('radiusText');
         const tsunamiText = document.getElementById('tsunamiText');
 
-        const simulateButtons = [document.getElementById('simulateBtn'), document.getElementById('simulateBtn2')];
+        const simulateButtons = [
+            document.getElementById('simulateBtn'),
+            document.getElementById('simulateBtn2')
+        ];
         const resetBtn = document.getElementById('resetBtn');
 
-        // Toggle delta-v control visibility
-        mitigationEl.addEventListener('change', (e) => {
+        // Toggle delta-v visibility
+        mitigationEl.addEventListener('change', e => {
             deltaVRow.style.display = (e.target.value === 'none') ? 'none' : 'block';
         });
 
-        // timeToImpact.addEventListener('input', () => {
-        //     timeVal.textContent = timeToImpact.value + ' days';
-        // });
-
+        // ----- COMPUTE & DISPLAY -----
         function computeAndShow() {
-            // read inputs
-            const d_m = parseFloat(diameterEl.value) || 0;           // m
-            const radius_m = d_m / 2.0;
-            const density = parseFloat(densityEl.value) || 3000;    // kg/m^3
-            const v_kms = parseFloat(velocityEl.value) || 0;        // km/s
-            const v_ms = v_kms * 1000.0;                            // m/s (vi)
-            const angle_deg = parseFloat(impactAngleEl.value) || 90;
-            const mitigation = mitigationEl.value;
+            // ---- Inputs ----
+            const d_m = parseFloat(diameterEl.value) || 0;
+            const r_m = d_m / 2;
+            const rho_i = parseFloat(densityEl.value) || 3000; // kg/m³
+            const v_kms = parseFloat(velocityEl.value) || 0;
+            const v_ms = v_kms * 1000; // m/s
+            const angle_deg = parseFloat(impactAngleEl.value) || 45;
+            const angle_rad = angle_deg * Math.PI / 180;
 
-            // Used for calculating transient crater diameter
+            const mitigation = mitigationEl.value;
+            const delta_v = (mitigation !== 'none') ? (parseFloat(deltaVEl.value) || 0) : 0;
+
             const g = parseFloat(gravityEl.value);
-            const y_str = parseFloat(targetMatStrEl.value);
-            const p_t = parseFloat(targetDensityEl.value);
-            const p_i = density;
-            const k1 = parseFloat(k1El.value);
+            const rho_t = parseFloat(targetDensityEl.value);
+            const Y = parseFloat(targetMatStrEl.value);
             const mu = parseFloat(muEl.value);
             const nu = parseFloat(nuEl.value);
-            const angle_rad = angle_deg * Math.PI / 180;
-            const v_eff = v_ms * Math.sin(angle_rad);
+            const k1 = parseFloat(k1El.value);
 
-            let delta_v = 0;
-            if (mitigation !== 'none') {
-                delta_v = parseFloat(deltaVEl.value) || 0;
-            }
+            // ---- Physics Calculations ----
+            const volume_m3 = (4 / 3) * Math.PI * Math.pow(r_m, 3);
+            const mass_kg = rho_i * volume_m3;
+            const v_eff_total = Math.max(0, v_ms - delta_v);
 
-            // Fill in missing values
-            densityEl.value = density;
-            diameterEl.value = d_m;
-            impactAngleEl.value = angle_deg;
-            velocityEl.value = v_kms;
+            const KE_J = 0.5 * mass_kg * v_eff_total ** 2;
+            const KE_Mt = KE_J / 4.184e15;
 
-            // volume (sphere)
-            const volume_m3 = (4.0 / 3.0) * Math.PI * Math.pow(radius_m, 3);
-            const mass_kg = density * volume_m3;
+            const v_eff_vertical = v_eff_total * Math.sin(angle_rad);
 
-            // apply mitigation as small delta-v change (simple linear adjust of speed)
-            // note: real deflection changes orbital phase and hit probability, this is just a demo
-            const effective_v_ms = Math.max(0, v_ms - delta_v);
+            // ---- Blast / affected radius (vertical fraction) ----
+            const KE_coupled = KE_J * Math.sin(angle_rad);
+            const KE_coupled_Mt = KE_coupled / 4.184e15;
+            const affectedRadius_km = KE_coupled_Mt > 0 ? 5 * Math.pow(KE_coupled_Mt, 1 / 3) : 0;
 
-            // kinetic energy (J)
-            const ke_j = 0.5 * mass_kg * Math.pow(effective_v_ms, 2);
+            // ---- Transient Crater (π-scaling) ----
+            const preFactor = d_m * k1;
+            const gravityRegime = (g * d_m) / (2 * v_eff_vertical ** 2) *
+                Math.pow(rho_t / rho_i, (2 * nu) / mu);
+            const strengthRegime = Math.pow(Y / (rho_t * v_eff_vertical ** 2), (2 + mu) / 2) *
+                Math.pow(rho_t / rho_i, (nu * (2 + mu)) / mu);
+            const exponent = -mu / (2 + mu);
+            const transientCrater_m = preFactor * Math.pow(gravityRegime + strengthRegime, exponent);
+            const transientCrater_km = transientCrater_m / 1000;
 
-            // TNT equivalent: 1 megaton TNT ≈ 4.184e15 J
-            const ke_megatons = ke_j / 4.184e15;
-
-            // blast / affected radius (very rough): scale with (energy)^(1/3)
-            const affected_km = ke_megatons > 0 ? 5 * Math.pow(ke_megatons, 1 / 3) : 0;
-
-            // Housen–Holsapple / Schmidt–Housen - Transient Crater Diameter
-            // replace v_ms with v_eff (effective impact velocity to factor in angle)
-            const pre_fac = d_m * k1;
-            const grav_reg = ((g * d_m) / (2 * (v_eff ** 2))) * ((p_t / p_i) ** (2 * nu / mu));
-            const str_reg = ((y_str / (p_t * (v_eff ** 2))) ** ((2 + mu) / 2)) * ((p_t / p_i) ** ((nu * (2 + mu)) / mu));
-            const exp = ((-1) * mu) / (2 + mu);
-            const transient_diam_m = pre_fac * ((grav_reg + str_reg) ** exp);
-            const transient_diam_km = transient_diam_m / 1000;
-
-            // tsunami risk heuristic: if impact is within coastal band (placeholder), or if crater_km > threshold
-            // NEED FIX: "risk level" for demo:
+            // ---- Tsunami heuristic ----
             let tsunamiRisk = 'None';
-            if (transient_diam_km > 1) tsunamiRisk = 'Low';
-            if (transient_diam_km > 1.5) tsunamiRisk = 'Medium';
-            if (transient_diam_km > 5) tsunamiRisk = 'High';
+            if (transientCrater_km > 1) tsunamiRisk = 'Low';
+            if (transientCrater_km > 1.5) tsunamiRisk = 'Medium';
+            if (transientCrater_km > 5) tsunamiRisk = 'High';
 
-            // update UI with formatted numbers
-            energyText.textContent = `${ke_megatons.toFixed(3)} Mt TNT equiv`;
-            craterText.textContent = `${transient_diam_km.toFixed(2)} km ≈ ${Math.round(transient_diam_m)} m`;
-            radiusText.textContent = `${affected_km.toFixed(2)} km (approx)`; // NEED FIX
+            // ---- Update UI ----
+            energyText.textContent = `${KE_Mt.toFixed(2)} Mt TNT equiv`;
+            craterText.textContent = `${transientCrater_km.toFixed(2)} km ≈ ${Math.round(transientCrater_m)} m`;
+            radiusText.textContent = `${affectedRadius_km.toFixed(2)} km (approx)`;
             tsunamiText.textContent = tsunamiRisk;
 
-
-            // Optionally: fire a custom event providing the raw numbers to 3D/map components
-            // Temporarily removed time to impact
-            const detail = {
-                mass_kg, ke_j, ke_megatons, transient_diam_km, affected_km, inputs: {
-                    d_m, density, v_kms, angle_deg, mitigation, delta_v
+            // Dispatch event for 3D/map components
+            document.dispatchEvent(new CustomEvent('sim:results', {
+                detail: {
+                    mass_kg,
+                    KE_J,
+                    KE_Mt,
+                    transientCrater_km,
+                    affectedRadius_km,
+                    inputs: { d_m, rho_i, v_kms, angle_deg, mitigation, delta_v }
                 }
-            };
-            document.dispatchEvent(new CustomEvent('sim:results', { detail }));
-
-            // Small visual cue
-            document.querySelectorAll('.results-card').forEach(c => c.classList.add('border', 'border-2', 'border-primary'));
-            setTimeout(() => {
-                document.querySelectorAll('.results-card').forEach(c => c.classList.remove('border', 'border-2', 'border-primary'));
-            }, 700);
+            }));
         }
 
         simulateButtons.forEach(btn => btn.addEventListener('click', computeAndShow));
+
         resetBtn.addEventListener('click', () => {
             diameterEl.value = 50;
             densityEl.value = 3000;
@@ -509,33 +459,21 @@
             mitigationEl.value = 'none';
             deltaVRow.style.display = 'none';
             deltaVEl.value = 0.5;
-            // timeToImpact.value = 90;
-            // timeVal.textContent = '90 days';
+
             energyText.textContent = '—';
             craterText.textContent = '—';
             radiusText.textContent = '—';
             tsunamiText.textContent = '—';
         });
 
-        // Example: how an embedded 3D/Map component might listen for sim results:
-        document.addEventListener('sim:results', (e) => {
-            // e.detail contains numbers you can animate in Three.js or draw on Leaflet
-            console.log('Sim results for 3D/map:', e.detail);
-        });
-
-        // keyboard accessibility: Enter to simulate when focused on controls
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('keydown', (evt) => {
-                if (evt.key === 'Enter') computeAndShow();
-            });
-        });
     });
 </script>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const density = document.getElementById('met-density');
-        const volume = document.getElementById('volume');
-        const mass = document.getElementById('mass');
+        const densityEl = document.getElementById('met-density');
+        const volumeEl = document.getElementById('volume');
+        const massEl = document.getElementById('mass');
         const volumeMassRow = document.getElementById('volume-mass-row');
         const expandBtn = document.querySelector('.expand-density');
         const minimizeBtn = document.getElementById('minimize-vol-mass');
@@ -544,53 +482,41 @@
         expandBtn.addEventListener("click", () => {
             volumeMassRow.classList.remove('d-none');
             expandBtn.classList.add('d-none');
-            density.readOnly = true;
+            densityEl.readOnly = true;
         });
-
         minimizeBtn.addEventListener("click", () => {
             volumeMassRow.classList.add('d-none');
             expandBtn.classList.remove('d-none');
-            density.readOnly = false;
+            densityEl.readOnly = false;
         });
 
         // Update density when mass or volume changes
         function updateDensity() {
-            if (Number(mass.value) === 0) {
-                mass.value = 1;
-            }
-            if (Number(volume.value) === 0) {
-                volume.value = 1;
-            }
-
-            density.value = (Number(mass.value) / Number(volume.value)).toPrecision(8);
+            if (Number(massEl.value) === 0) massEl.value = 1;
+            if (Number(volumeEl.value) === 0) volumeEl.value = 1;
+            densityEl.value = (Number(massEl.value) / Number(volumeEl.value)).toPrecision(8);
         }
 
-        // Attach listeners regardless of visibility
-        mass.addEventListener('input', updateDensity);
-        mass.addEventListener('change', updateDensity);
-        volume.addEventListener('input', updateDensity);
-        volume.addEventListener('change', updateDensity);
-
+        massEl.addEventListener('input', updateDensity);
+        massEl.addEventListener('change', updateDensity);
+        volumeEl.addEventListener('input', updateDensity);
+        volumeEl.addEventListener('change', updateDensity);
     });
-
 </script>
+
 <script>
     const form = document.getElementById("simulationForm");
 
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async e => {
         e.preventDefault();
-
         const formData = new FormData(form);
 
         try {
             const res = await fetch("{% url 'dashboard' %}", {
                 method: "POST",
-                headers: {
-                    "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
-                },
-                body: formData,
+                headers: { "X-CSRFToken": formData.get("csrfmiddlewaretoken") },
+                body: formData
             });
-
             const data = await res.json();
             console.log("Saved:", data);
         } catch (err) {
@@ -599,20 +525,21 @@
 
         form.scrollIntoView();
     });
-
 </script>
-<!-- <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const dot_container = document.getElementById('dots-map');
-        const totalCells = 35 * 55;
 
-        for (let i = 0; i < totalCells; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            dot_container.appendChild(cell);
-        }
-    });
-</script> -->
+<script>
+    if (!window._leafletMapInitialized) {
+        window._leafletMapInitialized = true;
+
+        const map = L.map("map", { attributionControl: false }).setView([50, 5], 2);
+
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: ""
+        }).addTo(map);
+    }
+</script>
+
 {% endblock %}
 
 {% endblock %}
