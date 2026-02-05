@@ -6,7 +6,9 @@ It allows users to explore hypothetical impact scenarios, visualize trajectories
 > ⚠️ This project is **educational and exploratory**. Physics models are simplified approximations, not authoritative hazard predictions.
 
 ---
+<img width="1107" height="956" alt="image" src="https://github.com/user-attachments/assets/25d12844-b9a4-4a31-a77c-463f56f8cfc9" />
 
+---
 ## Features
 
 - 🌍 **Interactive impact simulation**
