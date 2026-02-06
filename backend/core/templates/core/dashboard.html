@@ -44,7 +44,8 @@
 
                         <!-- Meteor Name -->
                         <div class="mb-3">
-                            <label for="met-name" class="form-label">Meteor name</label>
+                            <label for="met-name" class="form-label" title="Name your meteor scenario">Meteor
+                                name</label>
                             <input id="met-name" name="met-name" class="form-control" type="text" value="Impactor"
                                 aria-label="Asteroid name">
                             <div class="muted-small">Name scenario.</div>
@@ -53,13 +54,15 @@
                         <!-- Diameter & Density -->
                         <div class="row gx-2">
                             <div class="col-6 mb-3">
-                                <label for="met-diameter" class="form-label">Diameter (m)</label>
+                                <label for="met-diameter" class="form-label"
+                                    title="Diameter of the meteor in meters">Diameter (m)</label>
                                 <input id="met-diameter" name="met-diameter" class="form-control" type="number"
                                     min="0.1" step="0.1" value="50" aria-label="Asteroid diameter in meters">
                                 <div class="muted-small">Enter object diameter in meters.</div>
                             </div>
                             <div class="col-6 mb-3">
-                                <label for="met-density" class="form-label">Density (kg/m³)</label>
+                                <label for="met-density" class="form-label"
+                                    title="Density of the meteor (mass per unit volume, kg/m³)">Density (kg/m³)</label>
                                 <div class="d-flex align-items-center gap-2">
                                     <input id="met-density" name="met-density" class="form-control" type="number"
                                         min="500" step="10" value="3000" aria-label="Asteroid density">
@@ -74,13 +77,15 @@
                         <!-- Volume & Mass (Expandable) -->
                         <div class="row gx-2 d-none" id="volume-mass-row">
                             <div class="col-6 mb-3">
-                                <label for="volume" class="form-label">Volume (m³)</label>
+                                <label for="volume" class="form-label"
+                                    title="Volume of the meteor in cubic meters (m³)">Volume (m³)</label>
                                 <input id="volume" class="form-control" type="number" step="1" value="1000"
                                     aria-label="Volume of asteroid">
                                 <div class="muted-small">Approx volume of asteroid.</div>
                             </div>
                             <div class="col-6 mb-3">
-                                <label for="mass" class="form-label">Mass (kg)</label>
+                                <label for="mass" class="form-label"
+                                    title="Total mass of the meteor in kilograms (kg)">Mass (kg)</label>
                                 <div class="d-flex align-items-center gap-2">
                                     <input id="mass" name="mass" class="form-control" type="number" step="10"
                                         value="30000000" aria-label="Mass of asteroid">
@@ -96,13 +101,16 @@
                         <!-- Velocity & Impact Angle -->
                         <div class="row gx-2">
                             <div class="col-6 mb-3">
-                                <label for="velocity" class="form-label">Velocity (km/s)</label>
+                                <label for="velocity" class="form-label"
+                                    title="Impact velocity in kilometers per second">Velocity (km/s)</label>
                                 <input id="velocity" name="velocity" class="form-control" type="number" min="1"
                                     step="0.1" value="20" aria-label="Asteroid velocity in km/s">
                                 <div class="muted-small">Relative impact speed at encounter (km/s).</div>
                             </div>
                             <div class="col-6 mb-3">
-                                <label for="impact-angle" class="form-label">Impact angle (°)</label>
+                                <label for="impact-angle" class="form-label"
+                                    title="Angle of impact relative to the ground (0° = horizontal, 90° = vertical)">Impact
+                                    angle (°)</label>
                                 <input id="impact-angle" name="impact-angle" class="form-control" type="number" min="0"
                                     max="90" step="1" value="45" aria-label="Impact angle in degrees">
                                 <div class="muted-small">Angle from horizontal; 90° = vertical.</div>
@@ -111,7 +119,8 @@
 
                         <!-- Mitigation -->
                         <div class="mb-3">
-                            <label for="mitigation" class="form-label">Mitigation</label>
+                            <label for="mitigation" class="form-label"
+                                title="Choose a mitigation strategy to alter the meteor's trajectory or speed">Mitigation</label>
                             <select id="mitigation" class="form-select" aria-label="Mitigation strategy">
                                 <option value="none" selected>None</option>
                                 <option value="kinetic">Kinetic impactor (Δv)</option>
@@ -120,7 +129,9 @@
                         </div>
 
                         <div class="mb-3" id="deltaVRow" style="display:none;">
-                            <label for="deltaV" class="form-label">Delta-v (m/s)</label>
+                            <label for="deltaV" class="form-label"
+                                title="Change in velocity (Δv) applied by mitigation, measured in meters per second">Delta-v
+                                (m/s)</label>
                             <input id="deltaV" class="form-control" type="number" step="0.01" value="0.5"
                                 aria-label="Delta-v in meters per second">
                             <div class="muted-small">Extra velocity applied by mitigation before impact.</div>
@@ -132,7 +143,9 @@
                         <h5 class="card-title text-primary">Target Metrics</h5>
 
                         <div class="mb-3">
-                            <label for="celestial-body" class="form-label">Celestial Body</label>
+                            <label for="celestial-body" class="form-label"
+                                title="Select the target celestial body for the impact simulation">Celestial
+                                Body</label>
                             <select id="celestial-body" name="celestial-body" class="form-select"
                                 aria-label="Celestial Body Options">
                                 <option value="Earth" selected>Earth</option>
@@ -141,13 +154,17 @@
 
                         <div class="row gx-2 mb-3">
                             <div class="col-6">
-                                <label for="gravity" class="form-label">Gravity (m/s²)</label>
+                                <label for="gravity" class="form-label"
+                                    title="Surface gravity of the target body, measured in meters per second squared (m/s²)">Gravity
+                                    (m/s²)</label>
                                 <input id="gravity" name="gravity" class="form-control readonly-grey" type="number"
                                     value="9.81" readonly>
                                 <div class="muted-small">Gravity of celestial body.</div>
                             </div>
                             <div class="col-6">
-                                <label for="target-material" class="form-label">Target Surface Material</label>
+                                <label for="target-material" class="form-label"
+                                    title="Material type of the target surface (e.g., rock, soil, water)">Target Surface
+                                    Material</label>
                                 <select id="target-material" name="target-material" class="form-select"
                                     aria-label="Material of target zone">
                                     <option value="Crust">Rock (Non-porous)</option>
@@ -159,13 +176,17 @@
                         <!-- Material Properties -->
                         <div class="row gx-2 mb-3">
                             <div class="col-6">
-                                <label for="target-density" class="form-label">Density (kg/m³)</label>
+                                <label for="target-density" class="form-label"
+                                    title="Density of the target surface (mass per unit volume, kg/m³)">Density
+                                    (kg/m³)</label>
                                 <input id="target-density" name="target-density" class="form-control readonly-grey"
                                     type="number" value="2700" readonly>
                                 <div class="muted-small">Density of target surface.</div>
                             </div>
                             <div class="col-6">
-                                <label for="material-str" class="form-label">Material Strength (Pa)</label>
+                                <label for="material-str" class="form-label"
+                                    title="Strength of the target material, measured in Pascals (Pa). Indicates resistance to deformation or breaking.">Material
+                                    Strength (Pa)</label>
                                 <input id="material-str" name="material-str" class="form-control readonly-grey"
                                     type="number" value="10000000" readonly>
                                 <div class="muted-small">Target material strength.</div>
@@ -175,19 +196,22 @@
                         <!-- Scaling Constants -->
                         <div class="row gx-2 mb-3">
                             <div class="col-4">
-                                <label for="mu" class="form-label">μ</label>
+                                <label for="mu" class="form-label"
+                                    title="Gravity-scaling exponent (μ): Used in impact physics scaling laws. Controls how gravity affects crater size. Typical values range from 0.4 to 0.6.">μ</label>
                                 <input id="mu" name="mu" class="form-control readonly-grey" type="number" value="0.55"
                                     readonly>
                                 <div class="muted-small">Gravity-scaling exponent.</div>
                             </div>
                             <div class="col-4">
-                                <label for="k1" class="form-label">K₁</label>
+                                <label for="k1" class="form-label"
+                                    title="Dimensionless scaling constant (K₁): Empirical constant used in crater size calculations. Derived from experimental and observational data.">K₁</label>
                                 <input id="k1" name="k1" class="form-control readonly-grey" type="number" value="0.93"
                                     readonly>
                                 <div class="muted-small">Dimensionless scaling constant.</div>
                             </div>
                             <div class="col-4">
-                                <label for="nu" class="form-label">ν</label>
+                                <label for="nu" class="form-label"
+                                    title="Density-scaling exponent (ν): Used in impact scaling laws. Determines how density differences between impactor and target affect crater formation.">ν</label>
                                 <input id="nu" name="nu" class="form-control readonly-grey" type="number" value="0.40"
                                     readonly>
                                 <div class="muted-small">Density-scaling exponent.</div>
@@ -252,22 +276,30 @@
                         <h5 class="card-title text-primary">Results</h5>
 
                         <div class="results-card p-2">
-                            <div class="text-muted small">Kinetic Energy</div>
+                            <div class="text-muted small"
+                                title="Total kinetic energy released by the impactor upon collision, measured in megatons of TNT (Mt).">
+                                Kinetic Energy</div>
                             <div id="energyText" class="fs-5 fw-600">—</div>
                         </div>
 
                         <div class="results-card p-2">
-                            <div class="text-muted small">Transient Crater Diameter</div>
+                            <div class="text-muted small"
+                                title="Estimated diameter of the initial crater formed by the impact, before collapse or infill. Calculated using impact physics scaling laws.">
+                                Transient Crater Diameter</div>
                             <div id="craterText" class="fs-5 fw-600">—</div>
                         </div>
 
                         <div class="results-card p-2">
-                            <div class="text-muted small">Blast / Affected Radius</div>
+                            <div class="text-muted small"
+                                title="Approximate radius around the impact site affected by the blast, based on coupled energy and impact angle.">
+                                Blast / Affected Radius</div>
                             <div id="radiusText" class="fs-5 fw-600">—</div>
                         </div>
 
                         <div class="results-card p-2">
-                            <div class="text-muted small">Tsunami Risk</div>
+                            <div class="text-muted small"
+                                title="Heuristic estimate of tsunami risk based on crater size and impact energy. Not a detailed hydrodynamic simulation.">
+                                Tsunami Risk</div>
                             <div id="tsunamiText" class="fs-6">—</div>
                         </div>
 
