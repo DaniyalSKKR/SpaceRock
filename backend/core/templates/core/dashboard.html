@@ -559,16 +559,102 @@
     });
 </script>
 
+
 <script>
     if (!window._leafletMapInitialized) {
         window._leafletMapInitialized = true;
 
         const map = L.map("map", { attributionControl: false }).setView([50, 5], 2);
-
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
             attribution: ""
         }).addTo(map);
+
+        // Store selected location and drawn circles
+        let impactLatLng = null;
+        let circles = [];
+
+        // Helper to clear old circles
+        function clearCircles() {
+            circles.forEach(c => map.removeLayer(c));
+            circles = [];
+        }
+
+        // Listen for map click
+        map.on('click', function (e) {
+            impactLatLng = e.latlng;
+            // Save to a hidden input for form submission if needed
+            let coordInput = document.getElementById('impact-coords');
+            if (!coordInput) {
+                coordInput = document.createElement('input');
+                coordInput.type = 'hidden';
+                coordInput.id = 'impact-coords';
+                coordInput.name = 'impact-coords';
+                document.getElementById('simulationForm').appendChild(coordInput);
+            }
+            coordInput.value = `${impactLatLng.lat},${impactLatLng.lng}`;
+
+            // Draw circles using current results (if available)
+            drawImpactCircles();
+        });
+
+        // Listen for simulation results to update circles
+        document.addEventListener('sim:results', function (e) {
+            drawImpactCircles(e.detail);
+        });
+
+        function drawImpactCircles(simResults) {
+            if (!impactLatLng) return;
+            clearCircles();
+
+            // Get radii in km from simResults or from UI
+            let transientCrater_km = 0, affectedRadius_km = 0;
+            if (simResults) {
+                transientCrater_km = simResults.transientCrater_km || 0;
+                affectedRadius_km = simResults.affectedRadius_km || 0;
+            } else {
+                // Try to parse from UI if available
+                const craterText = document.getElementById('craterText').textContent;
+                const radiusText = document.getElementById('radiusText').textContent;
+                const craterMatch = craterText.match(/([\d.]+) km/);
+                const radiusMatch = radiusText.match(/([\d.]+) km/);
+                if (craterMatch) transientCrater_km = parseFloat(craterMatch[1]);
+                if (radiusMatch) affectedRadius_km = parseFloat(radiusMatch[1]);
+            }
+
+            // Always draw at least a small marker
+            const marker = L.circle(impactLatLng, { radius: 100, color: '#d00', fill: true, fillOpacity: 0.7, weight: 1 });
+            marker.addTo(map);
+            circles.push(marker);
+
+            // Draw transient crater diameter (radius = diameter/2)
+            if (transientCrater_km > 0) {
+                const craterCircle = L.circle(impactLatLng, {
+                    radius: (transientCrater_km * 1000) / 2,
+                    color: '#007bff',
+                    fill: false,
+                    weight: 2,
+                    dashArray: '6 6',
+                    title: 'Transient Crater Diameter'
+                });
+                craterCircle.addTo(map);
+                circles.push(craterCircle);
+            }
+
+            // Draw affected radius
+            if (affectedRadius_km > 0) {
+                const affectedCircle = L.circle(impactLatLng, {
+                    radius: affectedRadius_km * 1000,
+                    color: '#ffc107',
+                    fill: false,
+                    weight: 2,
+                    dashArray: '2 8',
+                    title: 'Blast/Affected Radius'
+                });
+                affectedCircle.addTo(map);
+                circles.push(affectedCircle);
+            }
+        }
     }
 </script>
 
