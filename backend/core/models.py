@@ -4,11 +4,14 @@ from django.utils import timezone
 class Scenario(models.Model):
 
     # outputs
-    crater_diameter = models.DecimalField(default=1, max_digits=10, decimal_places=6) # Modify
+    transient_diameter = models.DecimalField(default=1, max_digits=10, decimal_places=6)
+    affected_radius = models.DecimalField(default=1, max_digits=10, decimal_places=6) 
+    impact_coordinates = models.CharField(default='(0, 0)', max_length=20)
+    tsunami_risk = models.CharField(default='Low', max_length=10)
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"Scenario | d = {self.crater_diameter} m | date = {self.date}"
+        return f"Scenario date = {self.date} | d = {self.transient_diameter} m | r = {self.affected_radius} m | tsunami risk = {self.tsunami_risk} | coordinates = {self.impact_coordinates}"
 
 class Meteor(models.Model):
 
@@ -21,7 +24,7 @@ class Meteor(models.Model):
     
 
     def __str__(self):
-        return f"Meteor | d={self.diameter} m | v={self.velocity} m/s"
+        return f"Meteor name={self.name} | d={self.diameter} m | v={self.velocity} m/s | ρ={self.density} kg/m³ | angle={self.angle}°"
     
 class Target(models.Model):
 
@@ -38,5 +41,4 @@ class Target(models.Model):
     material_strength = models.DecimalField(max_digits=12, decimal_places=2)
 
     def __str__(self):
-        return f"{self.name} ({self.material}) | g={self.gravity} m/s²"
-    
+        return f"{self.name} | material=({self.material}) | g={self.gravity} m/s² | ρ={self.density} kg/m³ | strength={self.material_strength} Pa | k1={self.k1} | mu={self.mu} | nu={self.nu}"

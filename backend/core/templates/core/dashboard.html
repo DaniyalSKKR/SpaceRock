@@ -255,6 +255,7 @@
                                 </button>
                             </a>
                         </div>
+                        <input type="hidden" id="impact-coords" name="impact-coords" value="">
                     </div>
                 </div>
 
@@ -280,6 +281,7 @@
                                 title="Total kinetic energy released by the impactor upon collision, measured in megatons of TNT (Mt).">
                                 Kinetic Energy</div>
                             <div id="energyText" class="fs-5 fw-600">—</div>
+                            <input type="hidden" id="kineticEnergyInput" name="kinetic-energy" value="">
                         </div>
 
                         <div class="results-card p-2">
@@ -287,6 +289,7 @@
                                 title="Estimated diameter of the initial crater formed by the impact, before collapse or infill. Calculated using impact physics scaling laws.">
                                 Transient Crater Diameter</div>
                             <div id="craterText" class="fs-5 fw-600">—</div>
+                            <input type="hidden" id="transientDiameterInput" name="transient-diameter" value="">
                         </div>
 
                         <div class="results-card p-2">
@@ -294,6 +297,7 @@
                                 title="Approximate radius around the impact site affected by the blast, based on coupled energy and impact angle.">
                                 Blast / Affected Radius</div>
                             <div id="radiusText" class="fs-5 fw-600">—</div>
+                            <input type="hidden" id="affectedRadiusInput" name="affected-radius" value="">
                         </div>
 
                         <div class="results-card p-2">
@@ -301,6 +305,7 @@
                                 title="Heuristic estimate of tsunami risk based on crater size and impact energy. Not a detailed hydrodynamic simulation.">
                                 Tsunami Risk</div>
                             <div id="tsunamiText" class="fs-6">—</div>
+                            <input type="hidden" id="tsunamiRiskInput" name="tsunami-risk" value="">
                         </div>
 
                         <hr>
@@ -467,6 +472,16 @@
             craterText.textContent = `${transientCrater_km.toFixed(2)} km ≈ ${Math.round(transientCrater_m)} m`;
             radiusText.textContent = `${affectedRadius_km.toFixed(2)} km (approx)`;
             tsunamiText.textContent = tsunamiRisk;
+
+            // Hidden inputs
+            document.getElementById('transientDiameterInput').value =
+                transientCrater_km.toFixed(6);
+
+            document.getElementById('affectedRadiusInput').value =
+                affectedRadius_km.toFixed(6);
+
+            document.getElementById('tsunamiRiskInput').value =
+                tsunamiRisk;
 
             // Dispatch event for 3D/map components
             document.dispatchEvent(new CustomEvent('sim:results', {

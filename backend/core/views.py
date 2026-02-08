@@ -12,7 +12,12 @@ class DashboardView(TemplateView):
     template_name = "core/dashboard.html"
 
     def post(self, request):
-        scenario = Scenario.objects.create()
+        scenario = Scenario.objects.create(
+            transient_diameter=request.POST.get("transient-diameter"),
+            affected_radius=request.POST.get("affected-radius"),
+            impact_coordinates=request.POST.get("impact-coords"),
+            tsunami_risk=request.POST.get("tsunami-risk"),
+        )
 
         Meteor.objects.create(
             scenario=scenario,
