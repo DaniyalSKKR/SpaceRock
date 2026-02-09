@@ -1,7 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+
 
 from .models import Scenario, Meteor, Target
 
@@ -44,8 +48,10 @@ class DashboardView(TemplateView):
             "status": "ok",
             "scenario_id": scenario.id
         })
-    
-        # Add material later
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 
 def calcCollisionDiameter():
     #O’Brien, D. P., Marchi, S., & May, A. (2011). Impactor flux and cratering on Ceres and Vesta: implications for the early solar system, Astronomy & Astrophysics, 533, A13.

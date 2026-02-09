@@ -483,6 +483,7 @@
             document.getElementById('tsunamiRiskInput').value =
                 tsunamiRisk;
 
+
             // Dispatch event for 3D/map components
             document.dispatchEvent(new CustomEvent('sim:results', {
                 detail: {
@@ -494,6 +495,18 @@
                     inputs: { d_m, rho_i, v_kms, angle_deg, mitigation, delta_v }
                 }
             }));
+
+            // Send simulation data to backend API for globe
+            const coords = document.getElementById('impact-coords').value.split(',');
+            const impact_coordinates = coords.length === 2 ? { lat: parseFloat(coords[0]), lng: parseFloat(coords[1]) } : null;
+            const simData = {
+                transient_diameter: transientCrater_km * 1000, // meters
+                affected_radius: affectedRadius_km * 1000, // meters
+                impact_coordinates
+            };
+            if (window.visualizeScenarioOnGlobe) {
+                window.visualizeScenarioOnGlobe(simData);
+            }
         }
 
         simulateButtons.forEach(btn => btn.addEventListener('click', computeAndShow));
@@ -611,6 +624,22 @@
 
             // Draw circles using current results (if available)
             drawImpactCircles();
+
+            // Send coordinates to backend API for globe (with last known diameters if available)
+            const craterText = document.getElementById('craterText').textContent;
+            const radiusText = document.getElementById('radiusText').textContent;
+            const craterMatch = craterText.match(/([\d.]+) km/);
+            const radiusMatch = radiusText.match(/([\d.]+) km/);
+            const transient_diameter = craterMatch ? parseFloat(craterMatch[1]) * 1000 : 0;
+            const affected_radius = radiusMatch ? parseFloat(radiusMatch[1]) * 1000 : 0;
+            const coordData = {
+                transient_diameter,
+                affected_radius,
+                impact_coordinates: { lat: impactLatLng.lat, lng: impactLatLng.lng }
+            };
+            if (window.visualizeScenarioOnGlobe) {
+                window.visualizeScenarioOnGlobe(coordData);
+            }
         });
 
         // Listen for simulation results to update circles
