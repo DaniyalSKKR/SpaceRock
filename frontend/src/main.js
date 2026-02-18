@@ -134,6 +134,13 @@ atmosphere.renderOrder = 1;
 scene.add(atmosphere);
 
 // ---------------------
+// Globe scaling helpers
+// ---------------------
+const EARTH_RADIUS_KM = 6371; // reference radius in kilometers
+const globeRadiusUnits = globeGeometry.parameters.radius; // sphere radius in scene units
+const kmToGlobeUnits = globeRadiusUnits / EARTH_RADIUS_KM; // conversion factor for km -> scene units
+
+// ---------------------
 // Resize handling
 // ---------------------
 window.addEventListener("resize", () => {
@@ -242,6 +249,11 @@ function visualizeScenarioOnGlobe({
 	transient_diameter,
 	affected_radius,
 }) {
+	console.log("Visualizing scenario on globe:", {
+		impact_coordinates,
+		transient_diameter,
+		affected_radius,
+	});
 	clearGlobeMarkers();
 	if (!impact_coordinates) return;
 	// Place marker at impact point (as child of globe)
@@ -259,11 +271,11 @@ function visualizeScenarioOnGlobe({
 	globe.add(marker);
 
 	// Animated circles
-	const earthDiameter = 12742; // km
-	const craterRadiusKm = transient_diameter / 2;
-	const craterRadiusGlobe = craterRadiusKm / (earthDiameter / 2); // in globe units
-	const affectedRadiusKm = affected_radius;
-	const affectedRadiusGlobe = affectedRadiusKm / (earthDiameter / 2);
+	// Backend sends meters; convert to kilometers before scaling to globe units
+	const craterRadiusKm = transient_diameter / 2 / 1000;
+	const craterRadiusGlobe = craterRadiusKm * kmToGlobeUnits; // scale crater to globe size
+	const affectedRadiusKm = affected_radius / 1000;
+	const affectedRadiusGlobe = affectedRadiusKm * kmToGlobeUnits; // scale affected radius to globe size
 
 	// Animate crater first, then affected
 	if (craterRadiusGlobe > 0) {
