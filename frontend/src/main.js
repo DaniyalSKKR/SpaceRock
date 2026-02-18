@@ -206,6 +206,37 @@ function createCurvedCircle({ lat, lng, radius, color, opacity = 1.0 }) {
 	return new THREE.Line(curve, mat);
 }
 
+// --- Animated visualization for scenario ---
+function animateCircleExpansion({
+	lat,
+	lng,
+	targetRadius,
+	color,
+	opacity,
+	duration = 1200,
+	onDone,
+}) {
+	let start = null;
+	let currentCircle = null;
+	const minRadius = 0.001;
+	function step(ts) {
+		if (!start) start = ts;
+		const elapsed = ts - start;
+		const t = Math.min(elapsed / duration, 1);
+		const ease = t < 1 ? 1 - Math.pow(1 - t, 2) : 1; // ease out
+		const radius = minRadius + (targetRadius - minRadius) * ease;
+		if (currentCircle) globe.remove(currentCircle);
+		currentCircle = createCurvedCircle({ lat, lng, radius, color, opacity });
+		globe.add(currentCircle);
+		if (t < 1) {
+			requestAnimationFrame(step);
+		} else if (onDone) {
+			onDone(currentCircle);
+		}
+	}
+	requestAnimationFrame(step);
+}
+
 function visualizeScenarioOnGlobe({
 	impact_coordinates,
 	transient_diameter,
@@ -227,33 +258,44 @@ function visualizeScenarioOnGlobe({
 	marker.position.copy(markerPos);
 	globe.add(marker);
 
-	// Draw transient diameter (crater) as a curved band
+	// Animated circles
 	const earthDiameter = 12742; // km
 	const craterRadiusKm = transient_diameter / 2;
 	const craterRadiusGlobe = craterRadiusKm / (earthDiameter / 2); // in globe units
-	if (craterRadiusGlobe > 0) {
-		const craterCircle = createCurvedCircle({
-			lat: impact_coordinates.lat,
-			lng: impact_coordinates.lng,
-			radius: craterRadiusGlobe,
-			color: 0xffa500,
-			opacity: 0.7,
-		});
-		globe.add(craterCircle);
-	}
-
-	// Draw affected diameter (area) as a curved band
 	const affectedRadiusKm = affected_radius;
 	const affectedRadiusGlobe = affectedRadiusKm / (earthDiameter / 2);
-	if (affectedRadiusGlobe > 0) {
-		const affectedCircle = createCurvedCircle({
+
+	// Animate crater first, then affected
+	if (craterRadiusGlobe > 0) {
+		animateCircleExpansion({
 			lat: impact_coordinates.lat,
 			lng: impact_coordinates.lng,
-			radius: affectedRadiusGlobe,
+			targetRadius: craterRadiusGlobe,
+			color: 0xffa500,
+			opacity: 0.7,
+			duration: 1000,
+			onDone: () => {
+				if (affectedRadiusGlobe > 0) {
+					animateCircleExpansion({
+						lat: impact_coordinates.lat,
+						lng: impact_coordinates.lng,
+						targetRadius: affectedRadiusGlobe,
+						color: 0x00ffff,
+						opacity: 0.4,
+						duration: 1200,
+					});
+				}
+			},
+		});
+	} else if (affectedRadiusGlobe > 0) {
+		animateCircleExpansion({
+			lat: impact_coordinates.lat,
+			lng: impact_coordinates.lng,
+			targetRadius: affectedRadiusGlobe,
 			color: 0x00ffff,
 			opacity: 0.4,
+			duration: 1200,
 		});
-		globe.add(affectedCircle);
 	}
 }
 
