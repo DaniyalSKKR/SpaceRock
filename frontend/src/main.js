@@ -64,6 +64,15 @@ const PATHS = window.APP_CONFIG || {
 	MARKER_IMAGE: "/src/assets/red_circle.png",
 };
 
+const ROTATION_SPEED = 0.001;
+const CIRCLE_SEGMENTS = 180;
+const MARKER_RADIUS = 0.012;
+const MIN_CIRCLE_RADIUS = 0.001;
+const KM_PER_M = 0.001;
+const ATMOSPHERE_SCALE = 1.02; // ensure atmosphere shell sits clearly above globe surface
+const ATMOSPHERE_COLOR = 0x64b1e8;
+const ATMOSPHERE_OPACITY = 0.21;
+
 // ---------------------
 // Texture Loader
 // ---------------------
@@ -104,52 +113,51 @@ globe.receiveShadow = true;
 scene.add(globe);
 
 // ---------------------
-// Atmosphere shell
-// ---------------------
-const atmosphereMaterial = new THREE.ShaderMaterial({
-	vertexShader: `
-    varying vec3 vNormal;
-    void main() {
-      vNormal = normalize(normalMatrix * normal);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-	fragmentShader: `
-    varying vec3 vNormal;
-    void main() {
-      float intensity = pow(0.6 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
-      gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
-    }
-  `,
-	blending: THREE.AdditiveBlending,
-	side: THREE.BackSide,
-	transparent: true,
-});
-
-const atmosphere = new THREE.Mesh(
-	new THREE.SphereGeometry(1.08, 64, 64), // slightly larger than earth
-	atmosphereMaterial,
-);
-atmosphere.renderOrder = 1;
-scene.add(atmosphere);
-
-// ---------------------
 // Globe scaling helpers
 // ---------------------
 const EARTH_RADIUS_KM = 6371; // reference radius in kilometers
 const globeRadiusUnits = globeGeometry.parameters.radius; // sphere radius in scene units
 const kmToGlobeUnits = globeRadiusUnits / EARTH_RADIUS_KM; // conversion factor for km -> scene units
 
+function metersToGlobeUnits(meters) {
+	return meters * KM_PER_M * kmToGlobeUnits;
+}
+
+// ---------------------
+// Atmosphere shell (static glow around globe)
+// ---------------------
+const atmosphereGeometry = new THREE.SphereGeometry(
+	globeRadiusUnits * ATMOSPHERE_SCALE,
+	64,
+	64,
+);
+
+const atmosphereMaterial = new THREE.MeshBasicMaterial({
+	color: new THREE.Color(ATMOSPHERE_COLOR),
+	opacity: ATMOSPHERE_OPACITY,
+	transparent: true,
+	blending: THREE.AdditiveBlending,
+	side: THREE.BackSide,
+	depthWrite: false,
+	depthTest: false,
+});
+
+const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+atmosphere.renderOrder = 1;
+scene.add(atmosphere);
+
 // ---------------------
 // Resize handling
 // ---------------------
-window.addEventListener("resize", () => {
+function resizeScene() {
 	const w = container.clientWidth;
 	const h = container.clientHeight;
 	renderer.setSize(w, h);
 	camera.aspect = w / h;
 	camera.updateProjectionMatrix();
-});
+}
+
+window.addEventListener("resize", resizeScene);
 
 // ---------------------
 // Helper: Convert lat/lng to 3D position on globe
@@ -175,15 +183,14 @@ function clearGlobeMarkers() {
 
 // Helper: Create a curved circle (band) on the sphere
 function createCurvedCircle({ lat, lng, radius, color, opacity = 1.0 }) {
-	const segments = 180;
 	const points = [];
-	for (let i = 0; i <= segments; i++) {
-		const angle = (i / segments) * 2 * Math.PI;
+	for (let i = 0; i <= CIRCLE_SEGMENTS; i++) {
+		const angle = (i / CIRCLE_SEGMENTS) * 2 * Math.PI;
 		// Offset each point by the circle's radius from the impact center
 		// Find the point at (lat, lng) and then move out by 'radius' km along the local tangent
 		// This is done by calculating a new lat/lng at a fixed distance from the center
 		// Haversine formula for small circles:
-		const earthRadius = 1; // our globe's radius
+		const earthRadius = globeRadiusUnits; // our globe's radius
 		const angularRadius = radius / earthRadius; // in radians (radius is in globe units)
 		const latRad = THREE.MathUtils.degToRad(lat);
 		const lngRad = THREE.MathUtils.degToRad(lng);
@@ -225,13 +232,13 @@ function animateCircleExpansion({
 }) {
 	let start = null;
 	let currentCircle = null;
-	const minRadius = 0.001;
 	function step(ts) {
 		if (!start) start = ts;
 		const elapsed = ts - start;
 		const t = Math.min(elapsed / duration, 1);
 		const ease = t < 1 ? 1 - Math.pow(1 - t, 2) : 1; // ease out
-		const radius = minRadius + (targetRadius - minRadius) * ease;
+		const radius =
+			MIN_CIRCLE_RADIUS + (targetRadius - MIN_CIRCLE_RADIUS) * ease;
 		if (currentCircle) globe.remove(currentCircle);
 		currentCircle = createCurvedCircle({ lat, lng, radius, color, opacity });
 		globe.add(currentCircle);
@@ -257,8 +264,7 @@ function visualizeScenarioOnGlobe({
 	clearGlobeMarkers();
 	if (!impact_coordinates) return;
 	// Place marker at impact point (as child of globe)
-	const markerRadius = 0.012; // slightly smaller for clarity
-	const markerGeom = new THREE.SphereGeometry(markerRadius, 16, 16);
+	const markerGeom = new THREE.SphereGeometry(MARKER_RADIUS, 16, 16);
 	const markerMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
 	// Place marker exactly on the surface
 	const markerPos = latLngToVector3(
@@ -271,11 +277,9 @@ function visualizeScenarioOnGlobe({
 	globe.add(marker);
 
 	// Animated circles
-	// Backend sends meters; convert to kilometers before scaling to globe units
-	const craterRadiusKm = transient_diameter / 2 / 1000;
-	const craterRadiusGlobe = craterRadiusKm * kmToGlobeUnits; // scale crater to globe size
-	const affectedRadiusKm = affected_radius / 1000;
-	const affectedRadiusGlobe = affectedRadiusKm * kmToGlobeUnits; // scale affected radius to globe size
+	// Backend sends meters; convert to globe units
+	const craterRadiusGlobe = metersToGlobeUnits(transient_diameter / 2);
+	const affectedRadiusGlobe = metersToGlobeUnits(affected_radius);
 
 	// Animate crater first, then affected
 	if (craterRadiusGlobe > 0) {
@@ -320,10 +324,12 @@ window.visualizeScenarioOnGlobe = visualizeScenarioOnGlobe;
 function animate() {
 	requestAnimationFrame(animate);
 
-	globe.rotation.y += 0.001;
-	atmosphere.rotation.y += 0.001;
+	globe.rotation.y += ROTATION_SPEED;
+	atmosphere.rotation.y += ROTATION_SPEED;
 
 	controls.update();
 	renderer.render(scene, camera);
 }
+
+resizeScene();
 animate();
